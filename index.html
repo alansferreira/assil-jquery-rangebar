@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/assil-rangebar.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="css/assil-rangebar.css">
+</head>
+<body>
+
+    <div class="range-bar"></div>
+
+    <pre class="changing"></pre>
+    <script>
+
+        $(function () {
+            $(".range-bar").rangeBar({
+                ranges:[
+                    {start: 1, end: 4}, 
+                    {start: 10, end: 15}
+                ]
+            });
+        });
+
+    </script>
+</body>
+</html>

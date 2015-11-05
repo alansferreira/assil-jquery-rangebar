@@ -1,0 +1,29 @@
+.range-bar{
+    width: 100%;
+    height: 20px;
+    background-color: lightblue;
+}
+.range{
+    position: absolute;
+    overflow: hidden;
+}
+.range-label{
+    cursor: move;
+}
+
+.ui-resizable-handle {
+    width: 10px;
+    height: 20px;
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    position: absolute;
+    cursor: ew-resize;
+}
+.ui-resizable-e{
+   right:0px;
+     top:0px;    
+}
+.ui-resizable-w{
+     left:0px;
+     top:0px;
+}
