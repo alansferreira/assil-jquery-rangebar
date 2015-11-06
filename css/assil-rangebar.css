@@ -9,12 +9,15 @@
 }
 .range-label{
     cursor: move;
+    overflow: hidden;
+    margin-left: 2px;
+    margin-right: 2px;
 }
 
 .ui-resizable-handle {
-    width: 10px;
+    width: 1px;
     height: 20px;
-    background-color: #ffffff;
+    background-color: #000000;
     border: 1px solid #000000;
     position: absolute;
     cursor: ew-resize;
