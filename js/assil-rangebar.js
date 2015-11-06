@@ -97,15 +97,17 @@
     
     $.fn.rangeBar.defaultOptions = {
         min: 0, max: 100,
-        ranges: [{
-            start: 0, end: 0, 
-            disabled: false, 
-            css: '', 
-            
-        }], 
+        ranges: [],
         label: function(range){
             return parseInt(range.start) + '-' + parseInt(range.end);
         }
-        
     };
+    $.fn.rangeBar.defaultRange = {
+            start: 0, end: 0,
+            disabled: false,
+            css: '',
+            canOverlap: false
+    };
+
+
 }(jQuery));
