@@ -50,15 +50,9 @@
                         scroll: false, 
                         axis: "x", 
                         handle: '.range-label', 
-                        start: function(event, ui ){
-                            syncRange(event, ui);
-                        }, 
-                        drag: function( event, ui ){
-                            syncRange(event, ui);
-                        }, 
-                        stop: function( event, ui ){
-                            syncRange(event, ui);
-                        }
+                        start: range_drag_start,
+                        drag: range_drag_drag,
+                        stop: range_drag_stop
                     })
                     .on('mousedown', range_mousedown)
                     .on('mousemove', range_mousemove)
@@ -85,7 +79,34 @@
         $el.remove();
 
     };
+    function range_drag_start(event, ui ){
+        syncRange(event, ui);
+    };
+    function range_drag_drag( event, ui ){
+        var $range = $(event.target);
+        var $bar = $range.parent();
+        var range = $range.data("range");
 
+        if(range.canOverlap || range.canOverlap== undefined){
+            var overlaps = $bar.children().overlaps();
+            var height = $range.height();
+            var top = 0;
+
+            $bar.height((overlaps.length==0?height:overlaps.length*height));
+
+            overlaps.each(function(i, el){
+                $(el).offset({top: top+=height});
+                //$(el).height(height);
+            });
+            return true;
+        }
+
+
+        syncRange(event, ui);
+    };
+    function range_drag_stop( event, ui ){
+        syncRange(event, ui);
+    };
     function range_click(ev) {
         ev.stopPropagation();
         ev.preventDefault();
@@ -122,7 +143,6 @@
     function range_mousemove(evt){
 
     };
-
 
     function syncRange(event, ui){
         var $range = $(event.target);
