@@ -9,12 +9,13 @@
             
             $bar.data("rangebar", opts);
             
-            $.fn.rangeBar.setRanges($bar, opts.ranges);
+            setRanges($bar, opts.ranges);
             
         });
 
     };
-    $.fn.rangeBar.setRanges = function($bar, ranges){
+
+    function setRanges($bar, ranges){
         $bar.each(function () {
             var options = $bar.data("rangebar");
             var totalRange = options.max-options.min;
@@ -58,8 +59,10 @@
                         stop: function( event, ui ){
                             syncRange(event, ui);
                         }
-                    });
-                    
+                    })
+                    .on('mousedown', range_mousedown)
+                    .on('mousemove', range_mousemove)
+                    .on('click', range_click);
                 }
                 
                 syncRange({target: $range});
@@ -70,6 +73,57 @@
         });
     };
     
+    function removeRange($bar, range){
+        if(!range) return null;
+        var $el;
+        if(range.start!=null || range.end!=null){
+
+        }else{
+            $el = $(range);
+        }
+
+        $el.remove();
+
+    };
+
+    function range_click(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+
+        var $el = $(this);
+        var $bar = $el.parent();
+        var options = $bar.data("rangebar");
+
+        if(ev.which !== 2 || !options.allowDelete) return;
+
+        if($el.data('deleteConfirm')) {
+            removeRange($bar, this);
+            clearTimeout($el.data('deleteTimeout'));
+        } else {
+            $el.addClass('delete-confirm');
+            $el.data('deleteConfirm', true);
+
+            this.deleteTimeout = setTimeout(function() {
+                $el.removeClass('delete-confirm');
+                $el.data('deleteConfirm', false);
+            }, options.deleteTimeout);
+        }
+    }
+    function range_mousedown(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        this.hasChanged = false;
+        if(ev.which > 1) return;
+
+
+
+    }
+
+    function range_mousemove(evt){
+
+    };
+
+
     function syncRange(event, ui){
         var $range = $(event.target);
         var $bar = $range.parent();
@@ -100,7 +154,9 @@
         ranges: [],
         label: function(range){
             return parseInt(range.start) + '-' + parseInt(range.end);
-        }
+        }, // function to computes label display of range
+        allowDelete: true, //indicates if can ranges can be removed
+        deleteTimeout: 5000 //Timeout of delete confirmation state
     };
     $.fn.rangeBar.defaultRange = {
             start: 0, end: 0,
