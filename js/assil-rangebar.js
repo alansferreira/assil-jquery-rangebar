@@ -1,3 +1,7 @@
+/// <reference path="jquery.js" />
+/// <reference path="jquery-ui.js" />
+/// <reference path="jquery.overlaps.js" />
+/// <reference path="linq.min.js" />
 
 (function ($) {
 
@@ -87,16 +91,30 @@
         var $bar = $range.parent();
         var range = $range.data("range");
 
-        if(range.canOverlap || range.canOverlap== undefined){
-            var overlaps = $bar.children().overlaps();
+        var overlaps = $range.siblings().overlapsX($range);
+
+        if ((range.canOverlap || range.canOverlap == undefined) && overlaps.length > 0) {
+
             var height = $range.height();
             var top = 0;
 
             $bar.height((overlaps.length==0?height:overlaps.length*height));
 
-            overlaps.each(function(i, el){
+            $bar.children().each(function (c, child) {
+                var ix = overlaps.indexOf(child);
+                var $child = $(child);
+                $child.offset({ top: 0 });
+                if (ix != -1) {
+                    parei aqui!!
+                    return true;
+                } else {
+                    $child.removeClass("range-overlaped");
+                }
+            });
+            
+            $.each(overlaps, function(i, el){
                 $(el).offset({top: top+=height});
-                //$(el).height(height);
+                $(el).children().addClass("range-overlaped")
             });
             return true;
         }
@@ -168,7 +186,10 @@
     };
     function percentOf(total, value){return (value*100)/total;};
     function valueFromPercent(total, percent){return (total*percent)/100;};
-    
+
+
+
+
     $.fn.rangeBar.defaultOptions = {
         min: 0, max: 100,
         ranges: [],
@@ -183,6 +204,68 @@
             disabled: false,
             css: '',
             canOverlap: false
+    };
+
+}(jQuery));
+
+(function ($) {
+    function getRect(obj) {
+        var p = $(obj).offset();
+        return {
+            x: p.left,
+            y: p.top,
+            w: $(obj).width(),
+            h: $(obj).height()
+        };
+    };
+    function isOverlapRect(rect1, rect2) {
+        return( 
+            (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x) &&
+            (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y)
+        ); 
+    };
+    function isOverlapXRect(rect1, rect2) {
+        return (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x);
+    };
+    function isOverlapYRect(rect1, rect2) {
+        return (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y);
+    };
+
+    $.fn.overlaps = function (obj) {
+        var elems = [];
+        var rect1 = getRect(obj);
+        this.each(function () {
+            var rect2 = getRect(this);
+            if (isOverlapRect(rect1, rect2)) {
+                elems.push(this);
+            }
+        });
+
+        return elems;
+    };
+    $.fn.overlapsX = function (obj) {
+        var elems = [];
+        var rect1 = getRect(obj);
+        this.each(function () {
+            var rect2 = getRect(this);
+            if (isOverlapXRect(rect1, rect2)) {
+                elems.push(this);
+            }
+        });
+
+        return elems;
+    };
+    $.fn.overlapsY = function (obj) {
+        var elems = [];
+        var rect1 = getRect(obj);
+        this.each(function () {
+            var rect2 = getRect(this);
+            if (isOverlapYRect(rect1, rect2)) {
+                elems.push(this);
+            }
+        });
+
+        return elems;
     };
 
 

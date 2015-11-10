@@ -13,7 +13,9 @@
     margin-left: 2px;
     margin-right: 2px;
 }
-
+.range-overlaped{
+    background-color: lightyellow;
+}
 .ui-resizable-handle {
     width: 1px;
     height: 20px;
