@@ -27,9 +27,9 @@
             $.each(ranges, function(i, range){
                 
                 var $range = $("<div class='range'>").data('range', range);
-                var $leftHandle = $range.append("<div class='range-resize-handle left'>");
+                //var $leftHandle = $range.append("<div class='range-resize-handle left'>");
                 var $labelHandle = $range.append("<div class='range-label'>");
-                var $rightHandle = $range.append("<div class='range-resize-handle right'>");
+                //var $rightHandle = $range.append("<div class='range-resize-handle right'>");
                 
                 //$labelHandle.append(JSON.stringify(range));
                 
@@ -50,7 +50,9 @@
 
                     });
                     $range.draggable({
-                        containment: $bar, 
+                        containment: $bar,
+                        preventCollision: true,
+                        obstacle: ".range",
                         scroll: false, 
                         axis: "x", 
                         handle: '.range-label', 
@@ -87,39 +89,6 @@
         syncRange(event, ui);
     };
     function range_drag_drag( event, ui ){
-        var $range = $(event.target);
-        var $bar = $range.parent();
-        var range = $range.data("range");
-
-        var overlaps = $range.siblings().overlapsX($range);
-
-        if ((range.canOverlap || range.canOverlap == undefined) && overlaps.length > 0) {
-
-            var height = $range.height();
-            var top = 0;
-
-            $bar.height((overlaps.length==0?height:overlaps.length*height));
-
-            $bar.children().each(function (c, child) {
-                var ix = overlaps.indexOf(child);
-                var $child = $(child);
-                $child.offset({ top: 0 });
-                if (ix != -1) {
-                    parei aqui!!
-                    return true;
-                } else {
-                    $child.removeClass("range-overlaped");
-                }
-            });
-            
-            $.each(overlaps, function(i, el){
-                $(el).offset({top: top+=height});
-                $(el).children().addClass("range-overlaped")
-            });
-            return true;
-        }
-
-
         syncRange(event, ui);
     };
     function range_drag_stop( event, ui ){
@@ -173,7 +142,7 @@
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
             end: valueFromPercent(totalRange, percentOf(parentWidth, left + $range.width())), 
         };
-        
+        $range.height($bar.height());
         $range.data("range", range);
         $(".range-label", $range).text(options.label(range));
         

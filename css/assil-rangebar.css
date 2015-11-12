@@ -4,6 +4,8 @@
     background-color: lightblue;
 }
 .range{
+    
+    margin: 0px;
     position: absolute;
     overflow: hidden;
 }
