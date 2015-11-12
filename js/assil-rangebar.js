@@ -1,6 +1,7 @@
 /// <reference path="jquery-1.11.3.min.js" />
 /// <reference path="jquery-ui.min.js" />
 /// <reference path="jquery-collision.js" />
+/// <reference path="assil-rangebar.js" />
 
 (function ($) {
 
@@ -12,6 +13,8 @@
             
             $bar.data("rangebar", opts);
             
+            $bar.on("mousemove", bar_mousemove);
+
             setRanges($bar, opts.ranges);
             
         });
@@ -96,7 +99,7 @@
             ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
         }
 
-
+        
         var overlaps = $range.overlapsX($range.siblings());
 
         if (overlaps.length > 0) {
@@ -158,27 +161,21 @@
         } else {
             $el.addClass('delete-confirm');
             $el.data('deleteConfirm', true);
-
+            
             this.deleteTimeout = setTimeout(function() {
                 $el.removeClass('delete-confirm');
                 $el.data('deleteConfirm', false);
             }, options.deleteTimeout);
         }
     }
-    function range_mousedown(ev) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        this.hasChanged = false;
-        if(ev.which > 1) return;
+    function bar_mousemove(event) {
+        var $bar = $(event.target);
 
+        //if ($bar.children().pointOverlaps([{x: event.clientX, y: event.clientY, w: 1, h: 1}]).length > 0) return true;
 
-
-    }
-
-    function range_mousemove(evt){
+        console.log(JSON.stringify({ cx: event.clientX, xy: event.clientY }));
 
     };
-
     function syncRange(event, ui){
         var $range = $(event.target);
         var $bar = $range.parent();
@@ -206,8 +203,8 @@
     function percentOf(total, value){return (value*100)/total;};
     function valueFromPercent(total, percent){return (total*percent)/100;};
 
-
-
+    
+    
 
     $.fn.rangeBar.defaultOptions = {
         min: 0, max: 100,
@@ -270,9 +267,44 @@ function getRect(obj) {
         ret.isOverlaped = (ret.isOverlapTop || ret.isOverlapBottom);
         return ret;
     };
+    /**
+     * checks if selector ui elements overlaps over any rectangle passed in parameter
+     * @/// <param name="rects" type="[{x: 0, y:0, w:0, h:0}]">is an array of rectangles</param>
+     */
+    $.fn.pointOverlaps = function (rects) {
+        
+        var elems = [];
+        var computOverlaps = func_isOverlapRect || isOverlapRect;
+        this.each(function () {
+            var this_selector = this;
+            var $this = $(this_selector);
+            var rect1 = getRect(this);
+            
+            $.each(rects, function () {
+                var this_obstacle = this;
+                var rect2 = getRect(this_obstacle);
 
+                var overlap = computOverlaps(rect1, rect2);
+                if (overlap.isOverlaped) {
+                    elems.push({
+                        src: this_selector,
+                        obstacle: this_obstacle,
+                        overlap: overlap
+                    });
+                }
+            });
+        });
+
+    });
+
+    /**
+     * checks if selector ui elements overlaps over any other ui elements
+     * @param obstacles is an array of DOM or JQuery selector \r
+     * @param func_isOverlapRect It is the function that will calculate a rectangle collides with another and returning a {isOverlaped: true / false} if not mSQL value defaults to 'isOverlapRect'
+     */
     $.fn.overlaps = function (obstacles, func_isOverlapRect) {
         var elems = [];
+        
         var computOverlaps = func_isOverlapRect || isOverlapRect;
         this.each(function () {
             var this_selector = this;
