@@ -294,8 +294,7 @@ function getRect(obj) {
                 }
             });
         });
-
-    });
+    };
 
     /**
      * checks if selector ui elements overlaps over any other ui elements
