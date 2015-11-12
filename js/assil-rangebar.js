@@ -1,7 +1,6 @@
-/// <reference path="jquery.js" />
-/// <reference path="jquery-ui.js" />
-/// <reference path="jquery.overlaps.js" />
-/// <reference path="linq.min.js" />
+/// <reference path="jquery-1.11.3.min.js" />
+/// <reference path="jquery-ui.min.js" />
+/// <reference path="jquery-collision.js" />
 
 (function ($) {
 
@@ -37,35 +36,30 @@
                 
                 var point = measureRangeRect(totalRange, $bar.width(), range);
                 
-                $range.offset({left: point.left});
+                $range.offset({ left: point.left, top: $bar.offset().top });
                 $range.width(point.right - point.left);
+
+                syncRange({ target: $range });
                 
                 if(!range.disabled) {
                     $range.resizable({
                         containment: $bar,
                         handles: "e, w", 
-                        resize: function(event, ui ){
-                            syncRange(event, ui);
-                        }
-
+                        resize: range_resize
                     });
                     $range.draggable({
                         containment: $bar,
-                        preventCollision: true,
-                        obstacle: ".range",
                         scroll: false, 
                         axis: "x", 
                         handle: '.range-label', 
                         start: range_drag_start,
                         drag: range_drag_drag,
                         stop: range_drag_stop
-                    })
-                    .on('mousedown', range_mousedown)
-                    .on('mousemove', range_mousemove)
-                    .on('click', range_click);
+                    });
+
+                    $range.on('click', range_click);
                 }
                 
-                syncRange({target: $range});
                 //$range.offset({})
                 
                 
@@ -85,13 +79,67 @@
         $el.remove();
 
     };
-    function range_drag_start(event, ui ){
+    function preventCollision_onDragOrResize(event, ui) {
+        var $range = $(event.target);
+        var $bar = $(event.target).parent();
+        var bar_rect = getRect($bar);
+        var range_rect = getRect($range);
+
+        //prevents top change to same of bar container
+        ui.position.top = ui.originalPosition.top;
+        if (ui.offset) ui.offset.top = ui.originalPosition.top;
+        
+        if (ui.size) {
+            if (ui.position.left + ui.size.width > bar_rect.w) {
+                ui.size.width = bar_rect.w - ui.position.left;
+            }
+            ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
+        }
+
+
+        var overlaps = $range.overlapsX($range.siblings());
+
+        if (overlaps.length > 0) {
+            $.each(overlaps, function () {
+                var hint = this;
+                var obstacleRect = getRect(hint.obstacle);
+                //if contains size parameter this events come from resize
+                if (ui.size) {
+                    if (hint.overlap.isOverlapLeft) {
+                        ui.position.left = obstacleRect.x + obstacleRect.w;
+                    } else if (hint.overlap.isOverlapRight) {
+                        ui.size.width = obstacleRect.x - range_rect.x;
+                    }
+
+                    return true
+                }
+
+                if (hint.overlap.isOverlapLeft) {
+                    ui.position.left = obstacleRect.x + obstacleRect.w;
+                } else if (hint.overlap.isOverlapRight) {
+                    ui.position.left = obstacleRect.x - range_rect.w;
+                }
+            });
+            ui.offset = ui.position;
+            console.log(JSON.stringify(overlaps));
+            return true;
+        }
+
+    };
+    function range_resize(event, ui) {
+        preventCollision_onDragOrResize(event, ui);
+        syncRange(event, ui);
+    };
+    function range_drag_start(event, ui) {
+        preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
     };
     function range_drag_drag( event, ui ){
+        preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
     };
     function range_drag_stop( event, ui ){
+        preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
     };
     function range_click(ev) {
@@ -142,6 +190,8 @@
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
             end: valueFromPercent(totalRange, percentOf(parentWidth, left + $range.width())), 
         };
+
+        //$range.offset({ top: $bar.offset().top });
         $range.height($bar.height());
         $range.data("range", range);
         $(".range-label", $range).text(options.label(range));
@@ -177,64 +227,80 @@
 
 }(jQuery));
 
-(function ($) {
-    function getRect(obj) {
-        var p = $(obj).offset();
-        return {
-            x: p.left,
-            y: p.top,
-            w: $(obj).width(),
-            h: $(obj).height()
-        };
+function getRect(obj) {
+    var p = $(obj).offset();
+    return {
+        x: p.left,
+        y: p.top,
+        w: $(obj).width(),
+        h: $(obj).height()
     };
+};
+
+(function ($) {
     function isOverlapRect(rect1, rect2) {
-        return( 
-            (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x) &&
-            (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y)
-        ); 
+        // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
+        var ret = {
+            isOverlapRight: (rect1.x + rect1.w > rect2.x && rect1.x < rect2.x),
+            isOverlapLeft: (rect1.x < rect2.x + rect2.w && rect1.x > rect2.x),
+            isOverlapBottom: (rect1.y + rect1.h > rect2.y && rect1.y < rect2.y),
+            isOverlapTop: (rect1.y < rect2.y + rect2.h && rect1.y > rect2.y)
+        }; 
+        ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight || ret.isOverlapTop || ret.isOverlapBottom);
+        return ret;
+        //( 
+        //    (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x) &&
+        //    (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y)
+        //)
     };
     function isOverlapXRect(rect1, rect2) {
-        return (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x);
+        // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
+        var ret = {
+            isOverlapRight: (rect1.x + rect1.w > rect2.x && rect1.x < rect2.x),
+            isOverlapLeft: (rect1.x < rect2.x + rect2.w && rect1.x > rect2.x)
+        }; 
+        ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight);
+        return ret;
     };
     function isOverlapYRect(rect1, rect2) {
-        return (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y);
+        var ret = {
+            isOverlapBottom: (rect1.y + rect1.h > rect2.y && rect1.y < rect2.y),
+            isOverlapTop: (rect1.y < rect2.y + rect2.h && rect1.y > rect2.y)
+        }; 
+        ret.isOverlaped = (ret.isOverlapTop || ret.isOverlapBottom);
+        return ret;
     };
 
-    $.fn.overlaps = function (obj) {
+    $.fn.overlaps = function (obstacles, func_isOverlapRect) {
         var elems = [];
-        var rect1 = getRect(obj);
+        var computOverlaps = func_isOverlapRect || isOverlapRect;
         this.each(function () {
-            var rect2 = getRect(this);
-            if (isOverlapRect(rect1, rect2)) {
-                elems.push(this);
-            }
+            var this_selector = this;
+            var $this = $(this_selector);
+            var rect1 = getRect(this);
+            $(obstacles).each(function () {
+                var this_obstacle = this;
+                var $obstacle = $(this_obstacle);
+                var rect2 = getRect($obstacle);
+
+                var overlap = computOverlaps(rect1, rect2);
+                if (overlap.isOverlaped) {
+                    elems.push({
+                        src: this_selector,
+                        obstacle: this_obstacle, 
+                        overlap: overlap
+                    });
+                }
+            });
         });
 
         return elems;
     };
     $.fn.overlapsX = function (obj) {
-        var elems = [];
-        var rect1 = getRect(obj);
-        this.each(function () {
-            var rect2 = getRect(this);
-            if (isOverlapXRect(rect1, rect2)) {
-                elems.push(this);
-            }
-        });
-
-        return elems;
+        return this.overlaps(obj, isOverlapXRect);
     };
     $.fn.overlapsY = function (obj) {
-        var elems = [];
-        var rect1 = getRect(obj);
-        this.each(function () {
-            var rect2 = getRect(this);
-            if (isOverlapYRect(rect1, rect2)) {
-                elems.push(this);
-            }
-        });
-
-        return elems;
+        return this.overlaps(obj, isOverlapYRect);
     };
 
 
