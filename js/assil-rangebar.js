@@ -59,9 +59,9 @@
                     scroll: false, 
                     axis: "x", 
                     handle: '.range-label', 
-                    start: range_drag_start,
+                    //start: range_drag_start,
                     drag: range_drag_drag,
-                    stop: range_drag_stop
+                    //stop: range_drag_stop
                 });
 
                 $range.on('click', range_click);
@@ -131,7 +131,6 @@
             if (ui.offset) ui.offset = ui.position;
 
             console.log(JSON.stringify(overlaps));
-            return true;
         }
 
     };
@@ -220,7 +219,7 @@
             return parseInt(range.start) + '-' + parseInt(range.end);
         }, // function to computes label display of range
         allowDelete: true, //indicates if can ranges can be removed
-        deleteTimeout: 5000 //Timeout of delete confirmation state
+        deleteTimeout: 3000 //Timeout of delete confirmation state
     };
     $.fn.rangeBar.defaultRange = {
             start: 0, end: 0,

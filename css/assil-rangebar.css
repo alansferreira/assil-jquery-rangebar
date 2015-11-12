@@ -16,6 +16,9 @@
 .range.disabled{
     background-color: darkgray;
 }
+.range.delete-confirm{
+    background-color: firebrick;
+}
 .range-label{
     background-color: transparent;
     cursor: move;
