@@ -44,24 +44,27 @@
 
                 syncRange({ target: $range });
                 
-                if(!range.disabled) {
-                    $range.resizable({
-                        containment: $bar,
-                        handles: "e, w", 
-                        resize: range_resize
-                    });
-                    $range.draggable({
-                        containment: $bar,
-                        scroll: false, 
-                        axis: "x", 
-                        handle: '.range-label', 
-                        start: range_drag_start,
-                        drag: range_drag_drag,
-                        stop: range_drag_stop
-                    });
-
-                    $range.on('click', range_click);
+                if (range.disabled) {
+                    $range.addClass("disabled");
+                    return true;
                 }
+                
+                $range.resizable({
+                    containment: $bar,
+                    handles: "e, w", 
+                    resize: range_resize
+                });
+                $range.draggable({
+                    containment: $bar,
+                    scroll: false, 
+                    axis: "x", 
+                    handle: '.range-label', 
+                    start: range_drag_start,
+                    drag: range_drag_drag,
+                    stop: range_drag_stop
+                });
+
+                $range.on('click', range_click);
                 
                 //$range.offset({})
                 
@@ -110,6 +113,7 @@
                 if (ui.size) {
                     if (hint.overlap.isOverlapLeft) {
                         ui.position.left = obstacleRect.x + obstacleRect.w;
+                        ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
                     } else if (hint.overlap.isOverlapRight) {
                         ui.size.width = obstacleRect.x - range_rect.x;
                     }
@@ -123,7 +127,9 @@
                     ui.position.left = obstacleRect.x - range_rect.w;
                 }
             });
-            ui.offset = ui.position;
+
+            if (ui.offset) ui.offset = ui.position;
+
             console.log(JSON.stringify(overlaps));
             return true;
         }
@@ -182,10 +188,11 @@
         var options = $bar.data("rangebar");
         var totalRange = options.max-options.min;
         var parentWidth = $bar.width();
-        var left = $range.offset().left;
+        var left = (ui ? ui.position.left : $range.offset().left);
+
         var range = {
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
-            end: valueFromPercent(totalRange, percentOf(parentWidth, left + $range.width())), 
+            end: valueFromPercent(totalRange, percentOf(parentWidth, left + (ui && ui.size ? ui.size.width : $range.width()))), 
         };
 
         //$range.offset({ top: $bar.offset().top });

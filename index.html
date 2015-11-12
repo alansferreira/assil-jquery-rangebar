@@ -13,7 +13,8 @@
     
     http://jsfiddle.net/MrAdE/11/
 
-    <div class="range-bar"></div>
+    <div class="range-bar">
+    </div>
 
     <pre class="changing"></pre>
     <script>
@@ -22,7 +23,7 @@
             $(".range-bar").rangeBar({
                 ranges:[
                     {start: 1, end: 4}, 
-                    { start: 30, end: 50 },
+                    { start: 30, end: 50, disabled:true },
                     { start: 55, end: 70 }
                 ]
             });
