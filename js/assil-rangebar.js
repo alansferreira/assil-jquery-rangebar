@@ -92,8 +92,8 @@
         var range_rect = getRect($range);
 
         //prevents top change to same of bar container
-        ui.position.top = ui.originalPosition.top;
-        if (ui.offset) ui.offset.top = ui.originalPosition.top;
+        //ui.position.top = ui.originalPosition.top;
+        //if (ui.offset) ui.offset.top = ui.originalPosition.top;
         
         if (ui.size) {
             if (ui.position.left + ui.size.width > bar_rect.w) {
@@ -106,33 +106,33 @@
         var overlaps = $range.overlapsX($range.siblings());
 
         if (overlaps.length > 0) {
-            $.each(overlaps, function () {
-                var hint = this;
-                var obstacleRect = getRect(hint.obstacle);
-                //if contains size parameter this events come from resize
+            var hint = overlaps[0];
+
+            var obstacleRect = getRect(hint.obstacle);
+            //if contains size parameter this events come from resize
+            if (hint.overlap.isOverlapLeft) {
                 if (ui.size) {
-                    if (hint.overlap.isOverlapLeft) {
-                        ui.position.left = obstacleRect.x + obstacleRect.w;
-                        ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
-                    } else if (hint.overlap.isOverlapRight) {
-                        ui.size.width = obstacleRect.x - range_rect.x;
-                    }
-
-                    return true
-                }
-
-                if (hint.overlap.isOverlapLeft) {
                     ui.position.left = obstacleRect.x + obstacleRect.w;
-                } else if (hint.overlap.isOverlapRight) {
-                    ui.position.left = obstacleRect.x - range_rect.w;
+                    ui.size.width = (ui.originalPosition.left + ui.originalSize.width + 1) - ui.position.left;
+                } else {
+                    ui.position.left = obstacleRect.x + obstacleRect.w + 1;
                 }
-            });
+            } else if (hint.overlap.isOverlapRight) {
+                if (ui.size) {
+                    ui.size.width = obstacleRect.x - (range_rect.x + 1);
+                } else {
+                    ui.position.left = obstacleRect.x - (range_rect.w + 1);
+                }
+            }
 
-            if (ui.offset) ui.offset = ui.position;
 
-            console.log(JSON.stringify(overlaps));
+            console.log("overlaped on " + (hint.overlap.isOverlapLeft ? "left" : "right") + " of " + $range.data("range").id);
+            console.log("source rect:" + JSON.stringify(range_rect));
+            console.log("obstacle rect:" + JSON.stringify(obstacleRect));
+
         }
 
+        console.log("result:" + JSON.stringify(ui.position));
     };
     function range_resize(event, ui) {
         preventCollision_onDragOrResize(event, ui);
@@ -178,21 +178,22 @@
 
         //if ($bar.children().pointOverlaps([{x: event.clientX, y: event.clientY, w: 1, h: 1}]).length > 0) return true;
 
-        console.log(JSON.stringify({ cx: event.clientX, xy: event.clientY }));
+        //console.log(JSON.stringify({ cx: event.clientX, xy: event.clientY }));
 
     };
     function syncRange(event, ui){
         var $range = $(event.target);
+        var range = $range.data("range");
         var $bar = $range.parent();
         var options = $bar.data("rangebar");
         var totalRange = options.max-options.min;
         var parentWidth = $bar.width();
         var left = (ui ? ui.position.left : $range.offset().left);
 
-        var range = {
+        range = Object.assign(range, {
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
             end: valueFromPercent(totalRange, percentOf(parentWidth, left + (ui && ui.size ? ui.size.width : $range.width()))), 
-        };
+        });
 
         //$range.offset({ top: $bar.offset().top });
         $range.height($bar.height());
@@ -231,6 +232,10 @@
 }(jQuery));
 
 function getRect(obj) {
+    if (!obj) return obj;
+    if (obj.x && obj.y && obj.w && obj.h) return obj;
+
+
     var p = $(obj).offset();
     return {
         x: p.left,
@@ -239,45 +244,46 @@ function getRect(obj) {
         h: $(obj).height()
     };
 };
+function isOverlapRect(rect1, rect2) {
+    // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
+    var ret = {
+        isOverlapRight: (rect1.x + rect1.w >= rect2.x && rect1.x <= rect2.x),
+        isOverlapLeft: (rect1.x <= rect2.x + rect2.w && rect1.x >= rect2.x),
+        isOverlapBottom: (rect1.y + rect1.h > rect2.y && rect1.y <= rect2.y),
+        isOverlapTop: (rect1.y <= rect2.y + rect2.h && rect1.y >= rect2.y)
+    }; 
+    ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight || ret.isOverlapTop || ret.isOverlapBottom);
+    return ret;
+    //( 
+    //    (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x) &&
+    //    (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y)
+    //)
+};
+function isOverlapXRect(rect1, rect2) {
+    // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
+    var ret = {
+        isOverlapRight: (rect1.x + rect1.w >= rect2.x && rect1.x <= rect2.x),
+        isOverlapLeft: (rect1.x <= rect2.x + rect2.w && rect1.x >= rect2.x)
+    }; 
+    ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight);
+    return ret;
+};
+function isOverlapYRect(rect1, rect2) {
+    var ret = {
+        isOverlapBottom: (rect1.y + rect1.h >= rect2.y && rect1.y <= rect2.y),
+        isOverlapTop: (rect1.y <= rect2.y + rect2.h && rect1.y >= rect2.y)
+    }; 
+    ret.isOverlaped = (ret.isOverlapTop || ret.isOverlapBottom);
+    return ret;
+};
 
 (function ($) {
-    function isOverlapRect(rect1, rect2) {
-        // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
-        var ret = {
-            isOverlapRight: (rect1.x + rect1.w > rect2.x && rect1.x < rect2.x),
-            isOverlapLeft: (rect1.x < rect2.x + rect2.w && rect1.x > rect2.x),
-            isOverlapBottom: (rect1.y + rect1.h > rect2.y && rect1.y < rect2.y),
-            isOverlapTop: (rect1.y < rect2.y + rect2.h && rect1.y > rect2.y)
-        }; 
-        ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight || ret.isOverlapTop || ret.isOverlapBottom);
-        return ret;
-        //( 
-        //    (rect1.x <= rect2.x + rect2.w && rect1.x + rect1.w >= rect2.x) &&
-        //    (rect1.y <= rect2.y + rect2.h && rect1.y + rect1.h >= rect2.y)
-        //)
-    };
-    function isOverlapXRect(rect1, rect2) {
-        // overlapping indicators, indicate which part of the reference object (Rectangle1) overlap one obstacle.
-        var ret = {
-            isOverlapRight: (rect1.x + rect1.w > rect2.x && rect1.x < rect2.x),
-            isOverlapLeft: (rect1.x < rect2.x + rect2.w && rect1.x > rect2.x)
-        }; 
-        ret.isOverlaped = (ret.isOverlapLeft || ret.isOverlapRight);
-        return ret;
-    };
-    function isOverlapYRect(rect1, rect2) {
-        var ret = {
-            isOverlapBottom: (rect1.y + rect1.h > rect2.y && rect1.y < rect2.y),
-            isOverlapTop: (rect1.y < rect2.y + rect2.h && rect1.y > rect2.y)
-        }; 
-        ret.isOverlaped = (ret.isOverlapTop || ret.isOverlapBottom);
-        return ret;
-    };
     /**
      * checks if selector ui elements overlaps over any rectangle passed in parameter
-     * @/// <param name="rects" type="[{x: 0, y:0, w:0, h:0}]">is an array of rectangles</param>
+     * @param rects type="[{x: 0, y:0, w:0, h:0}]" is an array of rectangles</param>
+     * @param func_isOverlapRect It is the function that will calculate a rectangle collides with another and returning a {isOverlaped: true / false} if not mSQL value defaults to 'isOverlapRect'
      */
-    $.fn.pointOverlaps = function (rects) {
+    $.fn.pointOverlaps = function (rects, func_isOverlapRect) {
         
         var elems = [];
         var computOverlaps = func_isOverlapRect || isOverlapRect;
@@ -300,6 +306,14 @@ function getRect(obj) {
                 }
             });
         });
+
+        return elems;
+    };
+    $.fn.pointOverlapsX = function (rects) {
+        return this.pointOverlaps(rects, isOverlapXRect);
+    };
+    $.fn.pointOverlapsY = function (rects) {
+        return this.pointOverlaps(rects, isOverlapYRect);
     };
 
     /**
