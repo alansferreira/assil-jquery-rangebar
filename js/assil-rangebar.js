@@ -30,7 +30,7 @@
                 
                 var $range = $("<div class='range'>").data('range', range);
                 //var $leftHandle = $range.append("<div class='range-resize-handle left'>");
-                var $labelHandle = $range.append("<div class='range-label'>");
+                var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
                 //var $rightHandle = $range.append("<div class='range-resize-handle right'>");
                 
                 //$labelHandle.append(JSON.stringify(range));
@@ -41,6 +41,7 @@
                 
                 $range.offset({ left: point.left, top: $bar.offset().top });
                 $range.width(point.right - point.left);
+                $range.height($bar.height());
 
                 syncRange({ target: $range });
                 
@@ -86,10 +87,20 @@
 
     };
     function preventCollision_onDragOrResize(event, ui) {
+
         var $range = $(event.target);
+
         var $bar = $(event.target).parent();
         var bar_rect = getRect($bar);
         var range_rect = getRect($range);
+
+        var current_mouse_offset = { x: ui.position.left - ui.originalPosition.left, y: ui.position.top - ui.originalPosition.top };
+
+        range_rect.x = ui.position.left + current_mouse_offset.x;
+
+        console.log("input ui.position:" + JSON.stringify(ui.position));
+        console.log("input mouseOffset:" + JSON.stringify(current_mouse_offset));
+        console.log("   range position:" + JSON.stringify(range_rect));
 
         //prevents top change to same of bar container
         //ui.position.top = ui.originalPosition.top;
@@ -102,37 +113,37 @@
             ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
         }
 
-        
-        var overlaps = $range.overlapsX($range.siblings());
+        var siblings_rects = $range.siblings().measureRects();
+        var overlaps = $(range_rect).pointOverlapsX(siblings_rects);
 
         if (overlaps.length > 0) {
             var hint = overlaps[0];
 
             var obstacleRect = getRect(hint.obstacle);
+
             //if contains size parameter this events come from resize
             if (hint.overlap.isOverlapLeft) {
                 if (ui.size) {
                     ui.position.left = obstacleRect.x + obstacleRect.w;
-                    ui.size.width = (ui.originalPosition.left + ui.originalSize.width + 1) - ui.position.left;
+                    ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
                 } else {
-                    ui.position.left = obstacleRect.x + obstacleRect.w + 1;
+                    ui.position.left = obstacleRect.x + obstacleRect.w;
                 }
             } else if (hint.overlap.isOverlapRight) {
                 if (ui.size) {
-                    ui.size.width = obstacleRect.x - (range_rect.x + 1);
+                    ui.size.width = obstacleRect.x - (range_rect.x);
                 } else {
-                    ui.position.left = obstacleRect.x - (range_rect.w + 1);
+                    ui.position.left = obstacleRect.x - (range_rect.w );
                 }
             }
 
 
-            console.log("overlaped on " + (hint.overlap.isOverlapLeft ? "left" : "right") + " of " + $range.data("range").id);
-            console.log("source rect:" + JSON.stringify(range_rect));
-            console.log("obstacle rect:" + JSON.stringify(obstacleRect));
-
+            //console.log("  overlaped on " + (hint.overlap.isOverlapLeft ? "left" : "right") + " of " + $range.data("range").id);
+            console.log("      source rect:" + JSON.stringify(range_rect));
+            console.log("    obstacle rect:" + JSON.stringify(obstacleRect));
         }
 
-        console.log("result:" + JSON.stringify(ui.position));
+        console.log("result          :" + JSON.stringify(ui.position));
     };
     function range_resize(event, ui) {
         preventCollision_onDragOrResize(event, ui);
@@ -278,6 +289,15 @@ function isOverlapYRect(rect1, rect2) {
 };
 
 (function ($) {
+
+    $.fn.measureRects = function () {
+        var rects = [];
+        this.each(function () {
+            rects.push(getRect(this));
+        });
+        return rects;
+    };
+
     /**
      * checks if selector ui elements overlaps over any rectangle passed in parameter
      * @param rects type="[{x: 0, y:0, w:0, h:0}]" is an array of rectangles</param>
@@ -322,30 +342,35 @@ function isOverlapYRect(rect1, rect2) {
      * @param func_isOverlapRect It is the function that will calculate a rectangle collides with another and returning a {isOverlaped: true / false} if not mSQL value defaults to 'isOverlapRect'
      */
     $.fn.overlaps = function (obstacles, func_isOverlapRect) {
-        var elems = [];
+        try {
+            var elems = [];
         
-        var computOverlaps = func_isOverlapRect || isOverlapRect;
-        this.each(function () {
-            var this_selector = this;
-            var $this = $(this_selector);
-            var rect1 = getRect(this);
-            $(obstacles).each(function () {
-                var this_obstacle = this;
-                var $obstacle = $(this_obstacle);
-                var rect2 = getRect($obstacle);
+            var computOverlaps = func_isOverlapRect || isOverlapRect;
+            this.each(function () {
+                var this_selector = this;
+                var $this = $(this_selector);
+                var rect1 = getRect(this);
+                $(obstacles).each(function () {
+                    var this_obstacle = this;
+                    var $obstacle = $(this_obstacle);
+                    var rect2 = getRect($obstacle);
 
-                var overlap = computOverlaps(rect1, rect2);
-                if (overlap.isOverlaped) {
-                    elems.push({
-                        src: this_selector,
-                        obstacle: this_obstacle, 
-                        overlap: overlap
-                    });
-                }
+                    var overlap = computOverlaps(rect1, rect2);
+                    if (overlap.isOverlaped) {
+                        elems.push({
+                            src: this_selector,
+                            obstacle: this_obstacle, 
+                            overlap: overlap
+                        });
+                    }
+                });
             });
-        });
 
-        return elems;
+            return elems;
+
+        } catch (e) {
+            console.log(e);
+        }
     };
     $.fn.overlapsX = function (obj) {
         return this.overlaps(obj, isOverlapXRect);
