@@ -6,26 +6,37 @@
     padding: 0, 0, 0, 0;
 }
 .range{
+    
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
-    
+    background-color: darkturquoise;
     margin: 0;
     position: absolute;
     overflow: hidden;
 }
 .range.disabled{
     background-color: darkgray;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
 }
 .range.delete-confirm{
     background-color: firebrick;
 }
-.range-label{
+.range-label {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: small;
+    text-align: center;
+    
     background-color: transparent;
     cursor: move;
     overflow: hidden;
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
-
     margin-left: 2px;
     margin-right: 2px;
 }

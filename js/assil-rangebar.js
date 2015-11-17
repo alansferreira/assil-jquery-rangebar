@@ -2,6 +2,23 @@
 /// <reference path="jquery-ui.min.js" />
 /// <reference path="jquery-collision.js" />
 /// <reference path="assil-rangebar.js" />
+/**
+    events: 
+            @param event inherits event from event signature of draggable:drag/resizable:resize
+            @param ui inherits ui from ui signature of draggable:drag/resizable:resize
+            @param hint overlap params
+            @param $bar source bar element
+            @param $range source range element overlaping
+            @param $obstacle ovelaped object
+            function overlap(event, ui, hint, $bar, $range, $obstacle)
+
+            @param event inherits event from event signature of draggable:drag/resizable:resize
+            @param ui inherits ui from ui signature of draggable:drag/resizable:resize
+            @param $bar source bar element
+            @param $range source range element overlaping
+            function change(event, ui, $bar, $range)
+
+*/
 
 (function ($) {
 
@@ -11,62 +28,75 @@
         return this.each(function () {
             var $bar = $(this);
             
+            //$bar.append("<div class='range phantom'>")
+            //    .resizable({
+            //        containment: $bar,
+            //        handles: "e, w",
+            //        start: phantom_resize_start,
+            //        stop: phantom_resize_stop
+            //    });
+
             $bar.data("rangebar", opts);
-            
-            $bar.on("mousemove", bar_mousemove);
 
             setRanges($bar, opts.ranges);
             
         });
 
     };
+    function addRange($bar, range) {
+        var options = $bar.data("rangebar");
+        var totalRange = options.max - options.min;
 
+        var $range = $("<div class='range'>").data('range', range);
+        //var $leftHandle = $range.append("<div class='range-resize-handle left'>");
+        var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
+        //var $rightHandle = $range.append("<div class='range-resize-handle right'>");
+
+        //$labelHandle.append(JSON.stringify(range));
+
+        $bar.append($range);
+
+        var point = measureRangeRect(totalRange, $bar.width(), range);
+
+        $range.offset({ left: point.left, top: $bar.offset().top });
+        $range.width(point.right - point.left);
+        $range.height($bar.height());
+        
+        if (range.css) $range.addClass(range.css);
+
+        syncRange({ target: $range });
+
+        if (range.disabled) {
+            $range.addClass("disabled");
+            return true;
+        }
+
+        $range.resizable({
+            containment: $bar,
+            handles: "e, w",
+            resize: range_resize
+        });
+        $range.draggable({
+            containment: $bar,
+            scroll: false,
+            axis: "x",
+            handle: '.range-label',
+            start: range_drag_start,
+            drag: range_drag_drag,
+            stop: range_drag_stop
+        });
+
+        $range.on('click', range_click);
+
+        return $range;
+    };
     function setRanges($bar, ranges){
         $bar.each(function () {
-            var options = $bar.data("rangebar");
-            var totalRange = options.max-options.min;
+            var $b = $(this);
             
             $.each(ranges, function(i, range){
                 
-                var $range = $("<div class='range'>").data('range', range);
-                //var $leftHandle = $range.append("<div class='range-resize-handle left'>");
-                var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
-                //var $rightHandle = $range.append("<div class='range-resize-handle right'>");
-                
-                //$labelHandle.append(JSON.stringify(range));
-                
-                $bar.append($range);
-                
-                var point = measureRangeRect(totalRange, $bar.width(), range);
-                
-                $range.offset({ left: point.left, top: $bar.offset().top });
-                $range.width(point.right - point.left);
-                $range.height($bar.height());
-
-                syncRange({ target: $range });
-                
-                if (range.disabled) {
-                    $range.addClass("disabled");
-                    return true;
-                }
-                
-                $range.resizable({
-                    containment: $bar,
-                    handles: "e, w", 
-                    resize: range_resize
-                });
-                $range.draggable({
-                    containment: $bar,
-                    scroll: false, 
-                    axis: "x", 
-                    handle: '.range-label', 
-                    //start: range_drag_start,
-                    drag: range_drag_drag,
-                    //stop: range_drag_stop
-                });
-
-                $range.on('click', range_click);
-                
+                addRange($b, range);
                 //$range.offset({})
                 
                 
@@ -89,12 +119,11 @@
     function preventCollision_onDragOrResize(event, ui) {
 
         var $range = $(event.target);
-
         var $bar = $(event.target).parent();
         var bar_rect = getRect($bar);
         var range_rect = getRect($range);
 
-        var current_mouse_offset = { x: ui.position.left - ui.originalPosition.left, y: ui.position.top - ui.originalPosition.top };
+        var current_mouse_offset = { x: ui.position.left - range_rect.x, y: ui.position.top - range_rect.y };
 
         range_rect.x = ui.position.left + current_mouse_offset.x;
 
@@ -119,6 +148,8 @@
         if (overlaps.length > 0) {
             var hint = overlaps[0];
 
+            $bar.trigger("overlap", [event, ui, hint, $bar, $range, hint.obstacle]);
+
             var obstacleRect = getRect(hint.obstacle);
 
             //if contains size parameter this events come from resize
@@ -136,7 +167,8 @@
                     ui.position.left = obstacleRect.x - (range_rect.w );
                 }
             }
-
+            
+            $bar.trigger("change", [event, ui, $bar, $range]);
 
             //console.log("  overlaped on " + (hint.overlap.isOverlapLeft ? "left" : "right") + " of " + $range.data("range").id);
             console.log("      source rect:" + JSON.stringify(range_rect));
@@ -150,16 +182,16 @@
         syncRange(event, ui);
     };
     function range_drag_start(event, ui) {
-        preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
+        $(event.target).addClass("dragging");
     };
     function range_drag_drag( event, ui ){
         preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
     };
     function range_drag_stop( event, ui ){
-        preventCollision_onDragOrResize(event, ui);
         syncRange(event, ui);
+        $(event.target).removeClass("dragging");
     };
     function range_click(ev) {
         ev.stopPropagation();
@@ -169,30 +201,40 @@
         var $bar = $el.parent();
         var options = $bar.data("rangebar");
 
-        if(ev.which !== 2 || !options.allowDelete) return;
+        if (ev.which !== 2 || !options.allowDelete) return;
 
-        if($el.data('deleteConfirm')) {
+        if ($el.data('deleteConfirm')) {
             removeRange($bar, this);
             clearTimeout($el.data('deleteTimeout'));
         } else {
             $el.addClass('delete-confirm');
             $el.data('deleteConfirm', true);
-            
-            this.deleteTimeout = setTimeout(function() {
+
+            this.deleteTimeout = setTimeout(function () {
                 $el.removeClass('delete-confirm');
                 $el.data('deleteConfirm', false);
             }, options.deleteTimeout);
         }
-    }
-    function bar_mousemove(event) {
-        var $bar = $(event.target);
-
-        //if ($bar.children().pointOverlaps([{x: event.clientX, y: event.clientY, w: 1, h: 1}]).length > 0) return true;
-
-        //console.log(JSON.stringify({ cx: event.clientX, xy: event.clientY }));
-
     };
-    function syncRange(event, ui){
+
+    //function bar_mousedown(eventData) {
+    //    var $bar = $(eventData.target);
+    //    $bar.data("phantom-init-coords", { x: eventData.clientX, y: eventData.clientY, })
+
+    //};
+    //function bar_mousemove(event) {
+    //    var $bar = $(event.target);
+    //    if (event.which != 1) return;
+    //    var phantomInitCoords = $bar.data("phantom-init-coords");
+
+    //    var $phantom = $("<div class='phantom'>").offset({ x: (phantomInitCoords.x > event.clientX ? event.clientX : phantomInitCoords.x) });
+
+    //};
+    //function bar_mouseup(event) {
+    //    var $bar = $(event.target);
+
+    //};
+    function syncRange(event, ui) {
         var $range = $(event.target);
         var range = $range.data("range");
         var $bar = $range.parent();
