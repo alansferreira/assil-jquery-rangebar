@@ -26,14 +26,10 @@
 
         return this.each(function () {
             var $bar = $(this);
-            
-            //$bar.append("<div class='range phantom'>")
-            //    .resizable({
-            //        containment: $bar,
-            //        handles: "e, w",
-            //        start: phantom_resize_start,
-            //        stop: phantom_resize_stop
-            //    });
+            //$bar.on("click", function () {
+            //    var newRange = $.extend({}, opts.defaultsToNewRange);
+            //    addRange($bar, opts.defaultsToNewRange);
+            //});
 
             $bar.data("rangebar", opts);
 
@@ -282,6 +278,12 @@
     
     
 
+    $.fn.rangeBar.defaultRange = {
+            start: 3, end: 9,
+            disabled: false,
+            css: '',
+            canOverlap: false
+    };
     $.fn.rangeBar.defaultOptions = {
         min: 0, max: 100,
         ranges: [],
@@ -289,13 +291,8 @@
             return parseInt(range.start) + '-' + parseInt(range.end);
         }, // function to computes label display of range
         allowDelete: true, //indicates if can ranges can be removed
-        deleteTimeout: 3000 //Timeout of delete confirmation state
-    };
-    $.fn.rangeBar.defaultRange = {
-            start: 0, end: 0,
-            disabled: false,
-            css: '',
-            canOverlap: false
+        deleteTimeout: 3000, //Timeout of delete confirmation state, 
+        defaultsToNewRange: $.fn.rangeBar.defaultRange
     };
 
 }(jQuery));
