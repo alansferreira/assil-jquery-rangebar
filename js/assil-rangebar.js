@@ -1,6 +1,5 @@
 /// <reference path="jquery-1.11.3.min.js" />
 /// <reference path="jquery-ui.min.js" />
-/// <reference path="jquery-collision.js" />
 /// <reference path="assil-rangebar.js" />
 /**
     events: 
@@ -137,10 +136,6 @@
         console.log("input mouseOffset:" + JSON.stringify(current_mouse_offset));
         console.log("   range position:" + JSON.stringify(range_rect));
 
-        //prevents top change to same of bar container
-        //ui.position.top = ui.originalPosition.top;
-        //if (ui.offset) ui.offset.top = ui.originalPosition.top;
-        
         if (ui.size) {
             if (ui.position.left + ui.size.width > bar_rect.w) {
                 ui.size.width = bar_rect.w - ui.position.left;
@@ -148,21 +143,25 @@
             ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
         }
 
-        var siblings_rects = $range.siblings().measureRects();
-        var overlaps = $(range_rect).pointOverlapsX(siblings_rects);
+        var overlaps = $(range_rect).overlapsX($range.siblings());
 
         if (overlaps.length > 0 && range.canOverlap) {
             $range.addClass("overlaped");
         } else if (overlaps.length == 0 && range.canOverlap) {
             $range.removeClass("overlaped");
         }
+
         if (overlaps.length > 0 && !range.canOverlap) {
             $.each(overlaps, function () {
 
                 //var hint = overlaps[0];
                 var hint = this;
+                var obstacle_range = $(hint.obstacle).data("range");
+                if (obstacle_range.canOverlap) return true;
 
                 $bar.trigger("overlap", [event, ui, hint, $bar, $range, hint.obstacle]);
+                
+
 
                 var obstacleRect = getRect(hint.obstacle);
 
@@ -181,13 +180,12 @@
                         ui.position.left = obstacleRect.x - (range_rect.w );
                     }
                 }
+                console.log("    obstacle rect:" + JSON.stringify(obstacleRect));
             });
             
             $bar.trigger("change", [event, ui, $bar, $range]);
 
-            //console.log("  overlaped on " + (hint.overlap.isOverlapLeft ? "left" : "right") + " of " + $range.data("range").id);
             console.log("      source rect:" + JSON.stringify(range_rect));
-            console.log("    obstacle rect:" + JSON.stringify(obstacleRect));
         }
 
         console.log("result          :" + JSON.stringify(ui.position));
