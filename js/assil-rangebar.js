@@ -156,12 +156,15 @@
 
                 //var hint = overlaps[0];
                 var hint = this;
-                var obstacle_range = $(hint.obstacle).data("range");
-                if (obstacle_range.canOverlap) return true;
+                var $obstacle = $(hint.obstacle);
+                var obstacle_range = $obstacle.data("range");
+                if (obstacle_range.canOverlap) {
+                    $obstacle.addClass("overlaped");
+                    return true;
+                }
 
                 $bar.trigger("overlap", [event, ui, hint, $bar, $range, hint.obstacle]);
                 
-
 
                 var obstacleRect = getRect(hint.obstacle);
 
