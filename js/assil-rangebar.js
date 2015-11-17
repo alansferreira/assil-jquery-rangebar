@@ -119,13 +119,19 @@
     function preventCollision_onDragOrResize(event, ui) {
 
         var $range = $(event.target);
+        var range = $range.data("range");
         var $bar = $(event.target).parent();
         var bar_rect = getRect($bar);
         var range_rect = getRect($range);
 
-        var current_mouse_offset = { x: ui.position.left - range_rect.x, y: ui.position.top - range_rect.y };
+
+        var last_ui_position = $range.data("ui-position") || ui.position;
+        
+        var current_mouse_offset = { x: ui.position.left - last_ui_position.left, y: ui.position.top - last_ui_position.top };
 
         range_rect.x = ui.position.left + current_mouse_offset.x;
+
+        
 
         console.log("input ui.position:" + JSON.stringify(ui.position));
         console.log("input mouseOffset:" + JSON.stringify(current_mouse_offset));
@@ -145,28 +151,37 @@
         var siblings_rects = $range.siblings().measureRects();
         var overlaps = $(range_rect).pointOverlapsX(siblings_rects);
 
-        if (overlaps.length > 0) {
-            var hint = overlaps[0];
+        if (overlaps.length > 0 && range.canOverlap) {
+            $range.addClass("overlaped");
+        } else if (overlaps.length == 0 && range.canOverlap) {
+            $range.removeClass("overlaped");
+        }
+        if (overlaps.length > 0 && !range.canOverlap) {
+            $.each(overlaps, function () {
 
-            $bar.trigger("overlap", [event, ui, hint, $bar, $range, hint.obstacle]);
+                //var hint = overlaps[0];
+                var hint = this;
 
-            var obstacleRect = getRect(hint.obstacle);
+                $bar.trigger("overlap", [event, ui, hint, $bar, $range, hint.obstacle]);
 
-            //if contains size parameter this events come from resize
-            if (hint.overlap.isOverlapLeft) {
-                if (ui.size) {
-                    ui.position.left = obstacleRect.x + obstacleRect.w;
-                    ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
-                } else {
-                    ui.position.left = obstacleRect.x + obstacleRect.w;
+                var obstacleRect = getRect(hint.obstacle);
+
+                //if contains size parameter this events come from resize
+                if (hint.overlap.isOverlapLeft) {
+                    if (ui.size) {
+                        ui.position.left = obstacleRect.x + obstacleRect.w;
+                        ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
+                    } else {
+                        ui.position.left = obstacleRect.x + obstacleRect.w;
+                    }
+                } else if (hint.overlap.isOverlapRight) {
+                    if (ui.size) {
+                        ui.size.width = obstacleRect.x - (range_rect.x);
+                    } else {
+                        ui.position.left = obstacleRect.x - (range_rect.w );
+                    }
                 }
-            } else if (hint.overlap.isOverlapRight) {
-                if (ui.size) {
-                    ui.size.width = obstacleRect.x - (range_rect.x);
-                } else {
-                    ui.position.left = obstacleRect.x - (range_rect.w );
-                }
-            }
+            });
             
             $bar.trigger("change", [event, ui, $bar, $range]);
 

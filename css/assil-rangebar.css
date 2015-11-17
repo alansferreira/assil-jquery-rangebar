@@ -40,8 +40,8 @@
     margin-left: 2px;
     margin-right: 2px;
 }
-.range-overlaped{
-    background-color: lightyellow;
+.range.overlaped{
+    opacity: 0.7;
 }
 .ui-resizable-handle {
     width: 1px;
