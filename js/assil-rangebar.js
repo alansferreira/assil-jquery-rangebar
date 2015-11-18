@@ -124,7 +124,11 @@
         
         var current_mouse_offset = { x: ui.position.left - last_ui_position.left, y: ui.position.top - last_ui_position.top };
 
-        range_rect.x = ui.position.left + current_mouse_offset.x;
+        if (ui.size) {
+            range_rect.w = ui.size.width + current_mouse_offset.x;
+        } else {
+            range_rect.x = ui.position.left + current_mouse_offset.x;
+        }
 
         
 
@@ -149,7 +153,6 @@
 
         if (overlaps.length > 0 && !range.canOverlap) {
             $.each(overlaps, function () {
-
                 //var hint = overlaps[0];
                 var hint = this;
                 var $obstacle = $(hint.obstacle);
@@ -180,8 +183,19 @@
                     }
                 }
                 console.log("    obstacle rect:" + JSON.stringify(obstacleRect));
+
             });
-            
+
+            ////checks whether the piece is still overlapped
+            //range_rect.x = ui.position.left + current_mouse_offset.x;
+            //if (ui.size) range_rect.w = ui.size.width;
+
+            //var overlaps = $(range_rect).overlapsX($range.siblings());
+            //if (overlaps.length > 0) {
+            //    ui.position.left = $range.offset().left;
+            //    if (ui.size) ui.size.width = $range.width();
+            //}
+
             $bar.trigger("change", [event, ui, $bar, $range]);
 
             console.log("      source rect:" + JSON.stringify(range_rect));
@@ -263,7 +277,7 @@
         //$range.offset({ top: $bar.offset().top });
         $range.height($bar.height());
         $range.data("range", range);
-        $(".range-label", $range).text(options.label(range));
+        $(".range-label", $range).text(options.label($range, range));
         
     }
     function measureRangeRect(totalRange, componentWidth, range){

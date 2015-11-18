@@ -1,18 +1,31 @@
 .range-bar{
     width: 100%;
     height: 20px;
-    background-color: lightblue;
+    background-color: lightgray;
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
+
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
 }
-.range{
-    
+.range {
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
-    background-color: darkturquoise;
+    background-color: cadetblue;
     margin: 0;
     position: absolute;
     overflow: hidden;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    
+    transition: all 0.1s ease 0s;
+    transition-property: all;
+    transition-duration: 0.1s;
+    transition-timing-function: ease;
+    transition-delay: 0s;
+
 }
 .range.disabled{
     background-color: darkgray;
@@ -26,6 +39,7 @@
 }
 .range.delete-confirm{
     background-color: firebrick;
+    color: white;
 }
 .range-label {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -44,10 +58,11 @@
     opacity: 0.7;
 }
 .ui-resizable-handle {
-    width: 1px;
+    width: 3px;
     height: 20px;
     background-color: #000000;
-    border: 1px solid #000000;
+    /*border: 1px solid #000000;*/
+    opacity: 0.5;
     position: absolute;
     cursor: ew-resize;
 }
