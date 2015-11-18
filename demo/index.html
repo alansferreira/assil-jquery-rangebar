@@ -2,11 +2,18 @@
 <html>
 <head>
     <title>ASSIL - RangeBar</title>
-    <script src="js/jquery-1.11.3.min.js"></script>  
+    <!-- dependencies -->
+    <script src="js/jquery-1.11.3.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
-    
-    <link rel="stylesheet" type="text/css" href="css/assil-rangebar.css">
-    <script src="js/assil-rangebar.widget.js"></script>
+    <script src="js/jquery.resize.js"></script>
+
+    <!-- demo estetic -->
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- assil-rangebar -->
+    <link href="css/assil-rangebar.min.css" rel="stylesheet" /> 
+    <script src="js/assil-rangebar.min.js"></script>
 
     <style>
         .custom-range-orange {
@@ -19,9 +26,12 @@
     http://jsfiddle.net/MrAdE/11/
 
 
-    <button onclick="$('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 });">
-        $('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 })
+        <button onclick="$('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 });">
+            addRange advanced mode
     </button>
+    <code>
+        $('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 })
+    </code>
 
     <div style="width: 500px;">
 

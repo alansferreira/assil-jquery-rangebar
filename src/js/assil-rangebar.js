@@ -46,6 +46,8 @@
         addRange: function (range) {
 
             var options = this.options;
+            range = $.fn.extend({}, options.defaultRange, range);
+
             var totalRange = options.max - options.min;
 
             var $range = $("<div class='range'>").data('range', range);
@@ -282,7 +284,7 @@
 
 function getRect(obj) {
     if (!obj) return obj;
-    if (obj.x && obj.y && obj.w && obj.h) return obj;
+    if (obj.x != undefined && obj.y != undefined && obj.w != undefined && obj.h != undefined) return obj;
 
 
     var p = $(obj).offset();

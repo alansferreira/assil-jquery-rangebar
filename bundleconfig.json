@@ -1,0 +1,26 @@
+[
+  {
+    "outputFileName": "src/js/assil-rangebar.js",
+    "inputFiles": [
+      "src/js/assil-rangebar.js"
+    ]
+  },
+  {
+    "outputFileName": "demo/js/assil-rangebar.js",
+    "inputFiles": [
+      "src/js/assil-rangebar.js"
+    ]
+  },
+  {
+    "outputFileName": "demo/css/assil-rangebar.css",
+    "inputFiles": [
+      "src/css/assil-rangebar.css"
+    ]
+  },
+  {
+    "outputFileName": "src/css/assil-rangebar.css",
+    "inputFiles": [
+      "src/css/assil-rangebar.css"
+    ]
+  }
+]
