@@ -1,6 +1,11 @@
+.range-bar, 
+.range, 
+.range-label, 
+.range .ui-resizable-handle {
+    height: 30px;
+}
 .range-bar{
     width: 100%;
-    height: 20px;
     background-color: lightgray;
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
@@ -12,7 +17,7 @@
 .range {
     margin: 0, 0, 0, 0;
     padding: 0, 0, 0, 0;
-    background-color: cadetblue;
+    /*background-color: cadetblue;*/
     margin: 0;
     position: absolute;
     overflow: hidden;
@@ -44,8 +49,10 @@
 .range-label {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: small;
-    text-align: center;
     
+    text-align: center;
+    vertical-align: middle;
+
     background-color: transparent;
     cursor: move;
     overflow: hidden;
@@ -58,20 +65,35 @@
     opacity: 0.7;
     z-index: 999;
 }
-.ui-resizable-handle {
+.range:hover .ui-resizable-handle{
+    opacity: 0.5;
+    
+    transition: opacity 0.5s ease 0.5s;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;
+    transition-delay: 0s;
+}
+.range .ui-resizable-handle {
+    opacity: 0.2;
+    
+    transition: opacity 0.5s ease 0.5s;
+    transition-property: opacity;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;
+    transition-delay: 0s;
+
     width: 3px;
-    height: 20px;
     background-color: #000000;
     /*border: 1px solid #000000;*/
-    opacity: 0.5;
     position: absolute;
     cursor: ew-resize;
 }
-.ui-resizable-e{
+.range .ui-resizable-e{
    right:0px;
      top:0px;    
 }
-.ui-resizable-w{
+.range .ui-resizable-w{
      left:0px;
      top:0px;
 }

@@ -25,7 +25,10 @@
             defaultRange: {
                 start: 3, end: 9,
                 disabled: false,
-                css: '',
+                css: {
+                    range: '',
+                    label: ''
+                },
                 canOverlap: false
             },
             min: 0, max: 100,
@@ -61,7 +64,10 @@
             $range.width(point.right - point.left);
             $range.height(this.element.height());
 
-            if (range.css) $range.addClass(range.css);
+            if (range.css) {
+                $range.addClass(range.css.range);
+                $labelHandle.addClass(range.css.label);
+            }
 
             syncRange({ target: $range });
 
