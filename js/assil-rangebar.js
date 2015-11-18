@@ -269,7 +269,7 @@
         var parentWidth = $bar.width();
         var left = (ui ? ui.position.left : $range.offset().left);
 
-        range = Object.assign(range, {
+        range = $.fn.extend(range, {
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
             end: valueFromPercent(totalRange, percentOf(parentWidth, left + (ui && ui.size ? ui.size.width : $range.width()))), 
         });
