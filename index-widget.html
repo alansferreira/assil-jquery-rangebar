@@ -6,7 +6,7 @@
     <script src="js/jquery-ui.min.js"></script>
     
     <link rel="stylesheet" type="text/css" href="css/assil-rangebar.css">
-    <script src="js/assil-rangebar.js"></script>
+    <script src="js/assil-rangebar.widget.js"></script>
 
     <style>
         .custom-range-orange {
@@ -19,7 +19,9 @@
     http://jsfiddle.net/MrAdE/11/
 
 
-    <button onclick="$('.range-bar').addRange({ id: 'x', start: 15, end: 25 });"></button>
+    <button onclick="$('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 });">
+        $('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 })
+    </button>
 
     <div style="width: 500px;">
 
@@ -31,7 +33,7 @@
     <script>
 
         $(function () {
-            $(".range-bar").rangeBar({
+            $(".range-bar").rangebar({
                 label: function ($el, range) {
                     if (range.canOverlap) return "can Over: in:" + parseInt(range.start) + '-' + parseInt(range.end);
 

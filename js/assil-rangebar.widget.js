@@ -20,123 +20,101 @@
 */
 
 (function ($) {
+    $.widget("assil.rangebar", {
+        options: {
+            defaultRange: {
+                start: 3, end: 9,
+                disabled: false,
+                css: '',
+                canOverlap: false
+            },
+            min: 0, max: 100,
+            ranges: [],
+            label: function (range) {
+                return parseInt(range.start) + '-' + parseInt(range.end);
+            }, // function to computes label display of range
+            allowDelete: true, //indicates if can ranges can be removed
+            deleteTimeout: 3000
+        },
+        _create: function () {
+            this.element.addClass("range-bar").disableSelection();
 
-    $.fn.addRange = function (range) {
-        return this.each(function () {
-            var $bar = $(this);
-            var options = $bar.data("rangebar");
-            var newRange = $.fn.extend({}, options.defaultRange, range);
+            this.setRanges(this.options.ranges);
+            //this.element.data("rangebar", this.options);
+        },
+        _destroy: function () { },
+        addRange: function (range) {
 
-            addRange($bar, newRange);
-        });
-    };
-    $.fn.removeRange = function (rangeId) {
-        return this.each(function () {
-            var $bar = $(this);
+            var options = this.options;
+            var totalRange = options.max - options.min;
 
-            removeRange($bar, rangeId);
-        });
-    };
+            var $range = $("<div class='range'>").data('range', range);
+            var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
 
-    $.fn.rangeBar = function(options){
-        var opts = $.extend({}, $.fn.rangeBar.defaultOptions, options);
+            this.element.append($range);
 
-        return this.each(function () {
-            var $bar = $(this);
-            //$bar.on("click", function () {
-            //    var newRange = $.extend({}, opts.defaultsToNewRange);
-            //    addRange($bar, opts.defaultsToNewRange);
-            //});
+            var point = measureRangeRect(totalRange, this.element.width(), range);
 
-            $bar.data("rangebar", opts);
+            $range.offset({ left: point.left, top: this.element.offset().top });
+            $range.width(point.right - point.left);
+            $range.height(this.element.height());
 
-            this.addRange = function (range) {
-                addRange($bar, range);
-            };
-            this.removeRange = function (rangeId) {
-                removeRange($bar, rangeId);
-            };
+            if (range.css) $range.addClass(range.css);
 
-            setRanges($bar, opts.ranges);
-            
-        });
+            syncRange({ target: $range });
 
-    };
-    function addRange($bar, range) {
-        var options = $bar.data("rangebar");
-        var totalRange = options.max - options.min;
+            if (range.disabled) {
+                $range.addClass("disabled");
+                return true;
+            }
 
-        var $range = $("<div class='range'>").data('range', range);
-        //var $leftHandle = $range.append("<div class='range-resize-handle left'>");
-        var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
-        //var $rightHandle = $range.append("<div class='range-resize-handle right'>");
+            $range.resizable({
+                containment: this.element,
+                handles: "e, w",
+                resize: range_resize
+            });
+            $range.draggable({
+                containment: this.element,
+                scroll: false,
+                axis: "x",
+                handle: '.range-label',
+                start: range_drag_start,
+                drag: range_drag_drag,
+                stop: range_drag_stop
+            });
 
-        //$labelHandle.append(JSON.stringify(range));
+            $range.on('click', range_click);
 
-        $bar.append($range);
+            return $range;
+        },
+        removeRange: function (rangeId) {
+            var $ranges = this.element.chiden();
+            $ranges.each(function () {
+                var $range = $(this);
+                var range = $range.data("range");
 
-        var point = measureRangeRect(totalRange, $bar.width(), range);
+                if (range.id != rangeId) return true;
 
-        $range.offset({ left: point.left, top: $bar.offset().top });
-        $range.width(point.right - point.left);
-        $range.height($bar.height());
-        
-        if (range.css) $range.addClass(range.css);
-
-        syncRange({ target: $range });
-
-        if (range.disabled) {
-            $range.addClass("disabled");
-            return true;
+                $el.remove();
+                return false;
+            });
+        },
+        setRanges: function (ranges) {
+            var _bar = this;
+            $(_bar.element.children()).remove();
+            $.each(ranges, function () {
+                _bar.addRange(this);
+            });
         }
 
-        $range.resizable({
-            containment: $bar,
-            handles: "e, w",
-            resize: range_resize
-        });
-        $range.draggable({
-            containment: $bar,
-            scroll: false,
-            axis: "x",
-            handle: '.range-label',
-            start: range_drag_start,
-            drag: range_drag_drag,
-            stop: range_drag_stop
-        });
 
-        $range.on('click', range_click);
+    });
 
-        return $range;
-    };
-    function setRanges($bar, ranges){
-        $bar.each(function () {
-            var $b = $(this);
-            
-            $.each(ranges, function(i, range){
-                
-                addRange($b, range);
-                //$range.offset({})
-                
-                
-            });
-        });
-    };
-    
-    function removeRange($bar, rangeId){
-        if(!range) return null;
-        var $ranges = $bar.chiden();
-        $ranges.each(function () {
-            var $range = $(this);
-            var range = $range.data("range");
 
-            if (range.id != rangeId) return true;
 
-            $el.remove();
-            return false;
-        });
 
-    };
+
+
     function preventCollision_onDragOrResize(event, ui) {
 
         var $range = $(event.target);
@@ -251,48 +229,31 @@
         ev.stopPropagation();
         ev.preventDefault();
 
-        var $el = $(this);
-        var $bar = $el.parent();
+        var $range = $(this);
+        var $bar = $range.parent();
         var options = $bar.data("rangebar");
 
         if (ev.which !== 2 || !options.allowDelete) return;
 
-        if ($el.data('deleteConfirm')) {
-            removeRange($bar, this);
+        if ($range.data('deleteConfirm')) {
+            $bar.removeRange($range.data("range").id);
             clearTimeout($el.data('deleteTimeout'));
         } else {
-            $el.addClass('delete-confirm');
-            $el.data('deleteConfirm', true);
+            $range.addClass('delete-confirm');
+            $range.data('deleteConfirm', true);
 
             this.deleteTimeout = setTimeout(function () {
-                $el.removeClass('delete-confirm');
-                $el.data('deleteConfirm', false);
+                $range.removeClass('delete-confirm');
+                $range.data('deleteConfirm', false);
             }, options.deleteTimeout);
         }
     };
 
-    //function bar_mousedown(eventData) {
-    //    var $bar = $(eventData.target);
-    //    $bar.data("phantom-init-coords", { x: eventData.clientX, y: eventData.clientY, })
-
-    //};
-    //function bar_mousemove(event) {
-    //    var $bar = $(event.target);
-    //    if (event.which != 1) return;
-    //    var phantomInitCoords = $bar.data("phantom-init-coords");
-
-    //    var $phantom = $("<div class='phantom'>").offset({ x: (phantomInitCoords.x > event.clientX ? event.clientX : phantomInitCoords.x) });
-
-    //};
-    //function bar_mouseup(event) {
-    //    var $bar = $(event.target);
-
-    //};
     function syncRange(event, ui) {
         var $range = $(event.target);
         var range = $range.data("range");
         var $bar = $range.parent();
-        var options = $bar.data("rangebar");
+        var options = $bar.data("assilRangebar").options;
         var totalRange = options.max-options.min;
         var parentWidth = $bar.width();
         var left = (ui ? ui.position.left : $range.offset().left);
@@ -316,26 +277,6 @@
     };
     function percentOf(total, value){return (value*100)/total;};
     function valueFromPercent(total, percent){return (total*percent)/100;};
-
-    
-    
-
-    $.fn.rangeBar.defaultRange = {
-            start: 3, end: 9,
-            disabled: false,
-            css: '',
-            canOverlap: false
-    };
-    $.fn.rangeBar.defaultOptions = {
-        min: 0, max: 100,
-        ranges: [],
-        label: function(range){
-            return parseInt(range.start) + '-' + parseInt(range.end);
-        }, // function to computes label display of range
-        allowDelete: true, //indicates if can ranges can be removed
-        deleteTimeout: 3000, //Timeout of delete confirmation state, 
-        defaultsToNewRange: $.fn.rangeBar.defaultRange
-    };
 
 }(jQuery));
 
