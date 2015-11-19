@@ -20,7 +20,7 @@
             @param $range source range element overlaping
             function change(event, ui, $bar, $range)
 
-*/ 
+*/  
 var assil = { debgug: false };
 
 (function ($) {
