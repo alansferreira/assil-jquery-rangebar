@@ -7,7 +7,7 @@
   },
   {
     "outputFileName": "demo/js/assil-rangebar.js",
-    "inputFiles": [
+    "inputFiles": [ 
       "src/js/assil-rangebar.js"
     ]
   },
