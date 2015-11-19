@@ -12,8 +12,8 @@
     <script src="js/bootstrap.min.js"></script>
 
     <!-- assil-rangebar -->
-    <link href="css/assil-rangebar.min.css" rel="stylesheet" /> 
-    <script src="js/assil-rangebar.min.js"></script>
+    <link href="css/assil-rangebar.css" rel="stylesheet" /> 
+    <script src="js/assil-rangebar.js"></script>
 
     <style>
         .custom-range-orange {
@@ -23,36 +23,53 @@
 </head>
 <body>
     
-    http://jsfiddle.net/MrAdE/11/
 
+    <div class="row">
+        <div class="col-xs-6">
+            <div class="well">
+                <button class="btn" onclick="$('.range-bar').rangebar('addRange', { id: 'x', start: 15, end: 25 });">
+                    addRange
+                </button>
+                <code>
+                    <br />
+                    $('.range-bar').rangebar('addRange', { id: 'x', start: 15, end: 25 });
+                    <br />
+                    $('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 })
+                </code>
 
-        <button onclick="$('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 });">
-            addRange advanced mode
-    </button>
-    <code>
-        $('.range-bar').data('assilRangebar').addRange({ id: 'x', start: 15, end: 25 })
-    </code>
-
-    <div style="width: 500px;">
-
-        <div class="range-bar">
+            </div>
+        
         </div>
+        <div class="col-xs-6">
+            <div class="range-bar progress">
+            </div>
+        </div>
+
+
     </div>
+    
+    <div class="range-bar progress">
+    </div>
+
 
     <pre class="changing"></pre>
     <script>
 
-        $(function () {
+        $(document).ready(function () {
             $(".range-bar").rangebar({
                 label: function ($el, range) {
                     if (range.canOverlap) return "can Over: in:" + parseInt(range.start) + '-' + parseInt(range.end);
 
-                    return "can´t Over: in:" + parseInt(range.start) + '-' + parseInt(range.end);
+                    return "canï¿½t Over: in:" + parseInt(range.start) + '-' + parseInt(range.end);
                 },
                 ranges:[
-                    { id:"left", start: 1, end: 4, }, 
+                    {
+                        id: "left", start: 1, end: 4,
+
+                        css: { range: 'bg-success' }
+                    },
                     { id: "disabled", start: 30, end: 50, disabled: true },
-                    { id: "right", start: 55, end: 70, css: 'custom-range-orange', canOverlap: true }
+                    { id: "right", start: 55, end: 70, css: { range: 'custom-range-orange' }, canOverlap: true }
                 ]
             });
         });
