@@ -19,9 +19,13 @@
             @param $bar source bar element
             @param $range source range element overlaping
             function change(event, ui, $bar, $range)
+            
+
+            function range_click(event, ui, $bar, $range)
+
 
 */  
-var assil = { debgug: false };
+var assil = { debgug: true };
 
 (function ($) {
     $.widget("assil.rangebar", {
@@ -68,11 +72,13 @@ var assil = { debgug: false };
         addRange: function (range) {
 
             var options = this.options;
+            options.ranges.push(range);
+
             range = $.fn.extend({}, options.defaultRange, range);
 
             var totalRange = options.max - options.min;
 
-            var $range = $("<div class='range'>").data('range', range);
+            var $range = $("<div class='range' tabindex='1'>").data('range', range);
             var $labelHandle = $range.append("<div class='range-label'>&nbsp;</div>");
 
             this.element.append($range);
@@ -106,7 +112,8 @@ var assil = { debgug: false };
                     resize: range_resize
                 });
 
-            $range.on('click', range_click);
+            $range.on('click', range_click)
+                  .on('keydown', range_keydown);
 
             this.updateRangeUI($range);
 
@@ -173,13 +180,15 @@ var assil = { debgug: false };
 
     function preventCollision_onDragOrResize(event, ui) {
 
-        var getRect = ui.size ? getRectUsing$Offset : getRectUsing$Position;
+        var getRect = getRectUsing$Position;//ui.size ? getRectUsing$Offset : getRectUsing$Position;
 
         var $range = $(event.target);
         var range = $range.data("range");
         var $bar = $(event.target).parent();
         var bar_rect = getRect($bar);
         var range_rect = getRect($range);
+
+        var initialPos = $.fn.extend({}, { position: ui.position, size: (ui.size ? ui.size : null) });
 
 
         var last_ui_position = $range.data("ui-position") || ui.position;
@@ -271,8 +280,39 @@ var assil = { debgug: false };
             $bar.trigger("change", [event, ui, $bar, $range]);
 
             if (assil.debgug) console.log("      source rect:" + JSON.stringify(range_rect));
+
+            range_rect = {
+                x: ui.position.left - (current_mouse_offset.x + 2),
+                y: ui.position.top - (current_mouse_offset.y + 2),
+                w: (ui.size ? ui.size.width  - (current_mouse_offset.x +2): $range.width()),
+                h: (ui.size ? ui.size.height - (current_mouse_offset.x +2): $range.height())
+            };
+            overlaps = $(range_rect).overlapsX(siblings_rects);
+            $.each(overlaps, function () {
+                //var hint = overlaps[0];
+                var hint = this;
+                var $obstacle = $(hint.obstacle.$el);
+                var obstacle_range = $obstacle.data("range");
+                if (!obstacle_range) return true;
+                if (obstacle_range.canOverlap) return true;
+
+                ui.revert = true;
+                return false;
+            });
+
+        }
+        if (!ui.revert) {
+            if (ui.size) {
+                ui.revert = ((ui.position.left < 0) || (ui.position.left + ui.size > $bar.width()));
+            } else {
+                ui.revert = ((ui.position.left < 0) || (ui.position.left + $range.width() > $bar.width()));
+            }
         }
 
+        if (ui.revert) {
+            ui.position = ui.originalPosition;
+            if (ui.size) ui.size = ui.originalSize;
+        }
         if(ui.size){
             if (assil.debgug) console.log("result          :" + JSON.stringify({ x: ui.position.left, y: ui.position.top, x: ui.position.left, w: ui.size.width, h: ui.size.height }));
         }else{
@@ -295,13 +335,78 @@ var assil = { debgug: false };
         syncRange(event, ui);
         $(event.target).removeClass("dragging");
     };
+
+    function range_keydown(ev) {
+        //var $range = $(ev.target);
+        //var range_rect = getRectUsing$Position($range);
+        //var ui = {
+        //    originalPosition: { left: range_rect.x, top: 0 },
+        //    position: { left: range_rect.x, top: 0 }
+        //};
+        //if (ev.shiftKey) {
+        //    ui.size = { width: range_rect.w, height: range_rect.h};
+        //}
+        //switch (ev.which) {
+        //    case 35:  //END
+        //        break;
+        //    case 36:  //HOME
+        //        break;
+        //    case 37:  //LEFT
+        //        if (ev.shiftKey && ev.ctrlKey) {
+        //            ui.size.width -= 2
+        //        } else if (ev.shiftKey) {
+        //            ui.size.width -= 1
+        //        } else if (ev.ctrlKey) {
+        //            ui.position.left -= 2;
+        //        } else {
+        //            ui.position.left -= 1;
+        //        }
+        //        break;
+        //    case 39:  //RIGHT
+        //        if (ev.shiftKey && ev.ctrlKey) {
+        //            ui.size.width += 2
+        //        } else if (ev.shiftKey) {
+        //            ui.size.width += 1
+        //        } else if (ev.ctrlKey) {
+        //            ui.position.left += 2;
+        //        } else {
+        //            ui.position.left += 1;
+        //        }
+        //        break;
+        //    case 37:  //LEFT
+        //        break;
+        //    default:
+        //        return;
+        //}
+
+        //console.log(ev);
+        //console.log(JSON.stringify(ui));
+        ////var map = []
+        ////if (ev.which)
+
+        //preventCollision_onDragOrResize(ev, ui);
+        //$range.offset(ui.position);
+        //if (ui.size) {
+        //    $range.width(ui.size.width);
+        //    $range.height(ui.size.height);
+        //}
+        //syncRange(event, ui);
+
+    };
     function range_click(ev) {
         ev.stopPropagation();
         ev.preventDefault();
 
         var $range = $(this);
         var $bar = $range.parent();
+
+        var last_selected_range = $($bar.data("selected_range"));
+        if (last_selected_range != null) last_selected_range.removeClass("selected");
+        $bar.data("selected_range", $range);
+        $range.addClass("selected");
+
         var options = $bar.data("rangebar");
+
 
         if (ev.which !== 2 || !options.allowDelete) return;
 

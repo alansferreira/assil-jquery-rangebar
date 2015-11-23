@@ -24,6 +24,13 @@
     -moz-border-radius: 2px;
     -webkit-border-radius: 2px;
     border-radius: 2px;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: element;
+    -ms-user-select: element;
+    user-select: element;
     
     /*transition: all 0.1s ease 0s;
     transition-property: all;
@@ -32,15 +39,19 @@
     transition-delay: 0s;*/
 
 }
+.range.selected{
+    background-color: lightseagreen;
+
+    transition: background-color 0.5s ease 0s;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+    transition-timing-function: ease;
+    transition-delay: 0s;
+
+}
+
 .range.disabled{
     background-color: darkgray;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
 }
 .range.delete-confirm{
     background-color: firebrick;
