@@ -72,7 +72,7 @@ var assil = { debgug: true };
         addRange: function (range) {
 
             var options = this.options;
-            options.ranges.push(range);
+            //options.ranges.push(range);
 
             range = $.fn.extend({}, options.defaultRange, range);
 
@@ -113,7 +113,8 @@ var assil = { debgug: true };
                 });
 
             $range.on('click', range_click)
-                  .on('keydown', range_keydown);
+                  .on('keydown', range_keydown)
+                  .on('dblclick', range_dblclick);
 
             this.updateRangeUI($range);
 
@@ -301,12 +302,10 @@ var assil = { debgug: true };
             });
 
         }
+
         if (!ui.revert) {
-            if (ui.size) {
-                ui.revert = ((ui.position.left < 0) || (ui.position.left + ui.size > $bar.width()));
-            } else {
-                ui.revert = ((ui.position.left < 0) || (ui.position.left + $range.width() > $bar.width()));
-            }
+            ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
+            ui.position.left = ((ui.position.left + range_rect.w > $bar.width()) ? $bar.width() - range_rect.w : ui.position.left);
         }
 
         if (ui.revert) {
@@ -391,6 +390,18 @@ var assil = { debgug: true };
         //    $range.height(ui.size.height);
         //}
         //syncRange(event, ui);
+
+    };
+    function range_dblclick(ev) {
+        //fill range area
+        ev.stopPropagation();
+        ev.preventDefault();
+
+        var $range = $(this);
+        var $bar = $range.parent();
+        var range = $range.data("range");
+        var ranges_siblings = $range.siblings().data("range");
+
 
     };
     function range_click(ev) {
