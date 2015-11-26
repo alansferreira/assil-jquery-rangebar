@@ -69,8 +69,28 @@ var assil = { debgug: true };
             //this.element.data("rangebar", this.options);
         },
         _destroy: function () { },
-        addRange: function (range) {
+        getRanges: function () {
+            var ranges = [];
+            //syncRange({ target: this.element });
+            $(this.element).children().each(function () {
+                var $range = $(this);
+                var range = $range.data('range');
 
+                if (!range) return true;
+                
+                ranges.push(range);
+            });
+            ranges.sort(function (a, b) {
+                if (a.start < b.start) return -1;
+                if (a.start > b.start) return 1;
+                if (a.end < b.end) return -1
+                if (a.end > b.end) return 1
+                return 0;
+            });
+            return ranges;
+        },
+        addRange: function (range) {
+        
             var options = this.options;
             //options.ranges.push(range);
 
@@ -467,7 +487,7 @@ var assil = { debgug: true };
         var $bar = $range.parent();
         var range = $range.data("range");
         var ranges_siblings = $range.siblings().data("range");
-
+        
 
     };
     function range_click(ev) {
