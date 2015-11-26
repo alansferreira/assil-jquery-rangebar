@@ -176,10 +176,7 @@ var assil = { debgug: true };
     });
 
 
-
-
-
-    function preventCollision_onDragOrResize(event, ui) {
+    function preventCollision_onResize(event, ui) {
 
         var getRect = getRectUsing$Position;//ui.size ? getRectUsing$Offset : getRectUsing$Position;
 
@@ -187,32 +184,127 @@ var assil = { debgug: true };
         var range = $range.data("range");
         var $bar = $(event.target).parent();
         var bar_rect = getRect($bar);
-        var range_rect = getRect($range);
 
-        var initialPos = $.fn.extend({}, { position: ui.position, size: (ui.size ? ui.size : null) });
+        var range_rect = { x: ui.position.left, y: ui.position.top, w: ui.size.width, h: ui.size.height };
 
+        var last_range_rect = $range.data('last-range-rect') || range_rect;
 
-        var last_ui_position = $range.data("ui-position") || ui.position;
-        
-        var current_mouse_offset = { x: ui.position.left - last_ui_position.left, y: ui.position.top - last_ui_position.top };
+        var range_rect_offset = {
+            x: ui.position.left - ui.originalPosition.left,
+            y: ui.position.top - ui.originalPosition.top,
+            w: ui.size.width - ui.originalSize.width,
+            h: ui.size.height - ui.originalSize.height,
+
+        };
 
         if (assil.debgug) console.log("input ui.position:" + JSON.stringify(ui.position));
-        if (assil.debgug) console.log("input mouseOffset:" + JSON.stringify(current_mouse_offset));
+        if (assil.debgug) console.log("input mouseOffset:" + JSON.stringify(range_rect_offset));
+        if (assil.debgug) console.log("   range position:" + JSON.stringify(range_rect));
 
-        if (ui.size) {
-            //come from resizable event
-            range_rect.w = ui.size.width + current_mouse_offset.x;
-            if (ui.position.left + ui.size.width > bar_rect.w) {
-                ui.size.width = bar_rect.w - ui.position.left;
+        var siblings_rects = [];
+        $range.siblings().each(function () {
+            this_rect = getRect(this);
+            this_rect.$el = this;
+            siblings_rects.push(this_rect);
+        });
+
+        var overlaps = $(range_rect).overlapsX(siblings_rects);
+
+
+        if (overlaps.length > 1 && range.canOverlap) {
+            $range.addClass("overlaped");
+        } else if (overlaps.length == 1 && range.canOverlap) {
+            $range.removeClass("overlaped");
+        }
+
+        if (overlaps.length > 0 && !range.canOverlap) {
+            var overlaped = null;
+            $.each(overlaps, function () {
+                //var hint = overlaps[0];
+                var hint = this;
+                var $obstacle = $(hint.obstacle.$el);
+                var obstacle_range = $obstacle.data("range");
+                if (!obstacle_range) return true;
+                if (obstacle_range.canOverlap) {
+                    $obstacle.addClass("overlaped");
+                    return true;
+                }
+                overlaped = hint;
+                return false;
+            });
+
+            if (overlaped) {
+                $bar.trigger("overlap", [event, ui, overlaped, $bar, $range, overlaped.obstacle]);
+
+                if (assil.debgug) console.log("    obstacle rect:" + JSON.stringify(getRect(overlaped.obstacle)));
+
+                ui.revert = true;
             }
-            ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
 
-        } else {
-            //come from draggable event
-            range_rect.x = ui.position.left + current_mouse_offset.x;
+            $bar.trigger("change", [event, ui, $bar, $range]);
+
+            if (assil.debgug) console.log("      source rect:" + JSON.stringify(range_rect));
+
+            //range_rect = {
+            //    x: ui.position.left - (range_rect_offset.x + 2),
+            //    y: ui.position.top - (range_rect_offset.y + 2),
+            //    w: ui.size.width - (range_rect_offset.x + 2),
+            //    h: ui.size.height - (range_rect_offset.x + 2)
+            //};
+            overlaps = $(range_rect).overlapsX(siblings_rects);
+            $.each(overlaps, function () {
+                //var hint = overlaps[0];
+                var hint = this;
+                var $obstacle = $(hint.obstacle.$el);
+                var obstacle_range = $obstacle.data("range");
+                if (!obstacle_range) return true;
+                if (obstacle_range.canOverlap) return true;
+
+                ui.revert = true;
+                return false;
+            });
 
         }
 
+        if (!ui.revert) {
+            ui.position.left = (ui.position.left < 0 ? 0 : ui.position.left);
+            ui.position.left = ((ui.position.left + range_rect.w > $bar.width()) ? $bar.width() - range_rect.w : ui.position.left);
+        }
+
+        if (ui.revert) {
+            ui.position.left = last_range_rect.x;
+            ui.position.top = last_range_rect.y;
+            ui.size.width = last_range_rect.w;
+            ui.size.height = last_range_rect.h;
+        }
+
+        last_range_rect = { x: ui.position.left, y: ui.position.top, x: ui.position.left, w: ui.size.width, h: ui.size.height };
+        $range.data('last-range-rect', last_range_rect);
+        if (assil.debgug) console.log("result          :" + JSON.stringify(last_range_rect));
+    };
+
+    function preventCollision_onDrag(event, ui) {
+
+        var getRect = getRectUsing$Position;//ui.size ? getRectUsing$Offset : getRectUsing$Position;
+
+        var $range = $(event.target);
+        var range = $range.data("range");
+        var $bar = $(event.target).parent();
+        var bar_rect = getRect($bar);
+        var range_rect = { x: ui.position.left, y: ui.position.top, w: $range.width(), h: $range.height() };
+
+        var last_range_rect = $range.data('last-range-rect') || range_rect;
+
+        var range_rect_offset = {
+            x: ui.position.left - last_range_rect.x,
+            y: ui.position.top - last_range_rect.y,
+            w: range_rect.w - last_range_rect.w,
+            h: range_rect.h - last_range_rect.h,
+
+        };
+
+        if (assil.debgug) console.log("input ui.position:" + JSON.stringify(ui.position));
+        if (assil.debgug) console.log("input mouseOffset:" + JSON.stringify(range_rect_offset));
         if (assil.debgug) console.log("   range position:" + JSON.stringify(range_rect));
 
         var siblings_rects = [];
@@ -248,46 +340,20 @@ var assil = { debgug: true };
                 var obstacleRect = getRect(hint.obstacle);
                 if (assil.debgug) console.log("    obstacle rect:" + JSON.stringify(obstacleRect));
 
-                if (ui.size) {
-                    //come from resizable event
-                    if (hint.overlap.isOverlapLeft) {
-                        ui.position.left = obstacleRect.x + obstacleRect.w;
-                        ui.size.width = (ui.originalPosition.left + ui.originalSize.width) - ui.position.left;
-                    } else if (hint.overlap.isOverlapRight) {
-                        ui.size.width = obstacleRect.x - (range_rect.x);
-                    }
-                    return true;
-                }
+                ui.revert = true;
 
-                //come from draggable event
-                if (hint.overlap.isOverlapLeft) {
-                    ui.position.left = obstacleRect.x + obstacleRect.w;
-                } else if (hint.overlap.isOverlapRight) {
-                    ui.position.left = obstacleRect.x - (range_rect.w );
-                }
+                //if (hint.overlap.isOverlapLeft) {
+                //    ui.position.left = obstacleRect.x + obstacleRect.w;
+                //} else if (hint.overlap.isOverlapRight) {
+                //    ui.position.left = obstacleRect.x - (range_rect.w );
+                //}
 
             });
-
-            ////checks whether the piece is still overlapped
-            //range_rect.x = ui.position.left + current_mouse_offset.x;
-            //if (ui.size) range_rect.w = ui.size.width;
-
-            //var overlaps = $(range_rect).overlapsX($range.siblings());
-            //if (overlaps.length > 0) {
-            //    ui.position.left = $range.offset().left;
-            //    if (ui.size) ui.size.width = $range.width();
-            //}
 
             $bar.trigger("change", [event, ui, $bar, $range]);
 
             if (assil.debgug) console.log("      source rect:" + JSON.stringify(range_rect));
 
-            range_rect = {
-                x: ui.position.left - (current_mouse_offset.x + 2),
-                y: ui.position.top - (current_mouse_offset.y + 2),
-                w: (ui.size ? ui.size.width  - (current_mouse_offset.x +2): $range.width()),
-                h: (ui.size ? ui.size.height - (current_mouse_offset.x +2): $range.height())
-            };
             overlaps = $(range_rect).overlapsX(siblings_rects);
             $.each(overlaps, function () {
                 //var hint = overlaps[0];
@@ -309,17 +375,17 @@ var assil = { debgug: true };
         }
 
         if (ui.revert) {
-            ui.position = ui.originalPosition;
-            if (ui.size) ui.size = ui.originalSize;
+            ui.position.left = last_range_rect.x;
+            ui.position.top = last_range_rect.y;
         }
-        if(ui.size){
-            if (assil.debgug) console.log("result          :" + JSON.stringify({ x: ui.position.left, y: ui.position.top, x: ui.position.left, w: ui.size.width, h: ui.size.height }));
-        }else{
-            if (assil.debgug) console.log("result          :" + JSON.stringify(ui.position.left));
-        }
+
+        last_range_rect = { x: ui.position.left, y: ui.position.top, x: ui.position.left, w: range_rect.w, h: range_rect.h };
+        $range.data('last-range-rect', last_range_rect);
+        if (assil.debgug) console.log("result          :" + JSON.stringify(last_range_rect));
+
     };
     function range_resize(event, ui) {
-        preventCollision_onDragOrResize(event, ui);
+        preventCollision_onResize(event, ui);
         syncRange(event, ui);
     };
     function range_drag_start(event, ui) {
@@ -327,7 +393,7 @@ var assil = { debgug: true };
         $(event.target).addClass("dragging");
     };
     function range_drag_drag( event, ui ){
-        preventCollision_onDragOrResize(event, ui);
+        preventCollision_onDrag(event, ui);
         syncRange(event, ui);
     };
     function range_drag_stop( event, ui ){
@@ -442,11 +508,12 @@ var assil = { debgug: true };
         var options = $bar.data("assilRangebar").options;
         var totalRange = options.max-options.min;
         var parentWidth = $bar.width();
-        var left = (ui ? ui.position.left : $range.offset().left);
+        var left = (ui && ui.position ? ui.position.left : $range.position().left);
+        var width = (ui && ui.size ? ui.size.width : $range.width());
 
         range = $.fn.extend(range, {
             start: valueFromPercent(totalRange, percentOf(parentWidth, left)), 
-            end: valueFromPercent(totalRange, percentOf(parentWidth, left + (ui && ui.size ? ui.size.width : $range.width()))), 
+            end: valueFromPercent(totalRange, percentOf(parentWidth, left + width)), 
         });
 
         //$range.offset({ top: $bar.offset().top });
