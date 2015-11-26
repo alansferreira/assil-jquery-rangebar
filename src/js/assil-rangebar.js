@@ -132,7 +132,7 @@ var assil = { debgug: true };
                     resize: range_resize
                 });
 
-            $range.on('click', range_click)
+            $range.on('mousedown', range_click)
                   .on('keydown', range_keydown)
                   .on('dblclick', range_dblclick);
 
@@ -370,7 +370,6 @@ var assil = { debgug: true };
 
             });
 
-            $bar.trigger("change", [event, ui, $bar, $range]);
 
             if (assil.debgug) console.log("      source rect:" + JSON.stringify(range_rect));
 
@@ -399,6 +398,7 @@ var assil = { debgug: true };
             ui.position.top = last_range_rect.y;
         }
 
+        $bar.trigger("change", [event, ui, $bar, $range]);
         last_range_rect = { x: ui.position.left, y: ui.position.top, x: ui.position.left, w: range_rect.w, h: range_rect.h };
         $range.data('last-range-rect', last_range_rect);
         if (assil.debgug) console.log("result          :" + JSON.stringify(last_range_rect));
@@ -496,13 +496,12 @@ var assil = { debgug: true };
 
         var $range = $(this);
         var $bar = $range.parent();
+        var options = $bar.data().assilRangebar.options;
 
         var last_selected_range = $($bar.data("selected_range"));
         if (last_selected_range != null) last_selected_range.removeClass("selected");
         $bar.data("selected_range", $range);
         $range.addClass("selected");
-
-        var options = $bar.data("rangebar");
 
 
         if (ev.which !== 2 || !options.allowDelete) return;
