@@ -9,11 +9,19 @@
     "outputFileName": "demo/css/assil-rangebar.css"
   },
   {
+    "inputFiles":     ["src/js/jquery.resize.js"],
+    "outputFileName": "demo/js/jquery.resize.js"
+  },
+  {
     "inputFiles":     ["src/js/assil-rangebar.js"],
     "outputFileName": "dist/assil-rangebar.js"
   },
   {
     "inputFiles":     ["src/css/assil-rangebar.css"],
     "outputFileName": "dist/assil-rangebar.css"
+  },
+  {
+    "inputFiles":     ["src/js/jquery.resize.js"],
+    "outputFileName": "dist/jquery.resize.js"
   }
 ] 

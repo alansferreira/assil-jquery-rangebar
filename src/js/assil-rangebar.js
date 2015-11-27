@@ -27,7 +27,7 @@
 
 
 */  
-var assil = { debgug: true };
+var assil = { debgug: false };
 
 (function ($) {
     $.widget("assil.rangebar", {
@@ -116,6 +116,9 @@ var assil = { debgug: true };
             }
 
             //syncRange({ target: $range });
+            this.updateRangeUI($range);
+
+            $range.on('mousedown', range_click);
 
             if (range.disabled) {
                 $range.addClass("disabled");
@@ -138,23 +141,22 @@ var assil = { debgug: true };
                     resize: range_resize
                 });
 
-            $range.on('mousedown', range_click)
-                  .on('keydown', range_keydown)
+            $range.on('keydown', range_keydown)
                   .on('dblclick', range_dblclick);
 
-            this.updateRangeUI($range);
 
             return $range;
         },
         removeRange: function (rangeId) {
-            var $ranges = this.element.chiden();
+            var $ranges = this.element.children();
             $ranges.each(function () {
                 var $range = $(this);
                 var range = $range.data("range");
 
+                if (!range) return true;
                 if (range.id != rangeId) return true;
 
-                $el.remove();
+                $range.remove();
                 return false;
             });
         },
@@ -513,8 +515,8 @@ var assil = { debgug: true };
         if (ev.which !== 2 || !options.allowDelete) return;
 
         if ($range.data('deleteConfirm')) {
-            $bar.removeRange($range.data("range").id);
-            clearTimeout($el.data('deleteTimeout'));
+            $bar.rangebar("removeRange", $range.data("range").id);
+            clearTimeout($range.data('deleteTimeout'));
         } else {
             $range.addClass('delete-confirm');
             $range.data('deleteConfirm', true);

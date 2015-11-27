@@ -56,7 +56,7 @@
     background-color: darkgray;
 }
 .range.delete-confirm{
-    background-color: firebrick;
+    background-color: firebrick !important; 
     color: white;
 }
 .range-label {
