@@ -10,10 +10,10 @@
   },
   {
     "inputFiles":     ["src/js/assil-rangebar.js"],
-    "outputFileName": "assil-rangebar.js"
+    "outputFileName": "dist/assil-rangebar.js"
   },
   {
     "inputFiles":     ["src/css/assil-rangebar.css"],
-    "outputFileName": "assil-rangebar.css"
+    "outputFileName": "dist/assil-rangebar.css"
   }
 ] 
