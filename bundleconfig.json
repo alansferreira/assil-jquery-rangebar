@@ -7,5 +7,13 @@
   {
     "inputFiles":     ["src/css/assil-rangebar.css"],
     "outputFileName": "demo/css/assil-rangebar.css"
+  },
+  {
+    "inputFiles":     ["src/js/assil-rangebar.js"],
+    "outputFileName": "assil-rangebar.js"
+  },
+  {
+    "inputFiles":     ["src/css/assil-rangebar.css"],
+    "outputFileName": "assil-rangebar.css"
   }
 ] 
