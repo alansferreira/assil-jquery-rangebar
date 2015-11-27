@@ -48,6 +48,9 @@
         </div>
         <div class="col-xs-6">
             <div class="range-bar">
+
+                <span style="z-index:-10">asdfdffffffffffffffffffffffffffffffffffffffffffffff</span>
+
             </div>
         </div>
 
@@ -89,10 +92,13 @@
                         css: { range: 'bg-success' }
                     },
                     { id: "disabled", start: 30, end: 50, disabled: true },
-                    { id: "right", start: 55, end: 70, css: { range: 'custom-range-orange' }, canOverlap: true }
+                    { id: "right", start: 55, end: 70, css: { range: 'custom-range-orange' }, canOverlap: true, allowDelete: false }
                 ],
                 renderRange: function ($range, range) {
-                    $range.tooltip({ title: range_label($range, range) })
+                    $range.tooltip({ title: range_label($range, range) });
+                },
+                updateRange: function ($range, range) {
+                    $range.attr("title", range_label($range, range)).tooltip('fixTitle');
                 }
             }).on("change", function (event, ui, $bar, $range) {
                 $(".change").text(JSON.stringify($(event.target).rangebar('getRanges', {})));

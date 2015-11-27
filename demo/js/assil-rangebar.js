@@ -39,18 +39,19 @@ var assil = { debgug: false };
                     range: '',
                     label: ''
                 },
+                allowDelete: true, //indicates if can ranges can be removed
                 canOverlap: false
             },
             min: 0, max: 100,
             ranges: [],
-            allowDelete: true, //indicates if can ranges can be removed
             deleteTimeout: 3000,
 
             //callback functions
             label: function ($range, range) {
                 return parseInt(range.start) + '-' + parseInt(range.end);
             }, // function to computes label display of range
-            renderRange: null,  // function($range, range){}
+            renderRange: null,  // function($range, range){} occurs on addRange
+            updateRange: null,  // function($range, range){} occurs on range change, move or resize
         },
         _create: function () {
             var _component = this;
@@ -120,6 +121,7 @@ var assil = { debgug: false };
 
             //syncRange({ target: $range });
             this.updateRangeUI($range);
+            if (options.renderRange) options.renderRange($range, range);
 
             $range.on('mousedown', range_click);
 
@@ -165,7 +167,7 @@ var assil = { debgug: false };
         },
         setRanges: function (ranges) {
             var _bar = this;
-            $(_bar.element.children()).remove();
+            $(_bar.element.children('.range')).remove();
             $.each(ranges, function () {
                 _bar.addRange(this);
             });
@@ -183,9 +185,9 @@ var assil = { debgug: false };
 
             $(".range-label", $range).text(options.label($range, range));
 
-            if (options.renderRange) options.renderRange($range, range);
+            if (options.updateRange) options.updateRange($range, range);
 
-            if(assil.debgug) console.log("UI range rect after change:" + JSON.stringify(getRectUsing$Position($range)));
+            if (assil.debgug) console.log("UI range rect after change:" + JSON.stringify(getRectUsing$Position($range)));
 
         },
         getRelativeUIRectFromRange: function (range) {
@@ -508,6 +510,11 @@ var assil = { debgug: false };
         ev.preventDefault();
 
         var $range = $(this);
+        var range = $range.data("range");
+
+        if (!range) return;
+
+
         var $bar = $range.parent();
         var options = $bar.data().assilRangebar.options;
 
@@ -517,7 +524,7 @@ var assil = { debgug: false };
         $range.addClass("selected");
 
 
-        if (ev.which !== 2 || !options.allowDelete) return;
+        if (ev.which !== 2 || !range.allowDelete) return;
 
         if ($range.data('deleteConfirm')) {
             $bar.rangebar("removeRange", $range.data("range").id);
@@ -552,7 +559,9 @@ var assil = { debgug: false };
         $range.height($bar.height());
         $range.data("range", range);
         $(".range-label", $range).text(options.label($range, range));
-        
+
+        if (options.updateRange) options.updateRange($range, range);
+
     }
     function measureRangeRect(totalRange, componentWidth, range){
         return {
