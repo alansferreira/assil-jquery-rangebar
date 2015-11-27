@@ -4,6 +4,8 @@
 
 /// <reference path="assil-rangebar.js" />
 
+// https://github.com/alansferreira/assil-jquery-rangebar
+
 /**
     events: 
             @param event inherits event from event signature of draggable:drag/resizable:resize
@@ -66,9 +68,13 @@ var assil = { debgug: true };
 
             });
 
+            _component.element.getRanges = _component.getRanges
+
             //this.element.data("rangebar", this.options);
         },
-        _destroy: function () { },
+        _destroy: function () {
+            $.Widget.prototype.destroy.call(this);
+        },
         getRanges: function () {
             var ranges = [];
             //syncRange({ target: this.element });
