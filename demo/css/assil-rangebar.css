@@ -54,6 +54,7 @@
 
 .range.disabled{
     background-color: darkgray;
+    cursor: default;
 }
 .range.delete-confirm{
     background-color: firebrick !important; 
