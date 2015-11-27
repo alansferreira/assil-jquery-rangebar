@@ -43,11 +43,14 @@ var assil = { debgug: false };
             },
             min: 0, max: 100,
             ranges: [],
-            label: function (range) {
+            allowDelete: true, //indicates if can ranges can be removed
+            deleteTimeout: 3000,
+
+            //callback functions
+            label: function ($range, range) {
                 return parseInt(range.start) + '-' + parseInt(range.end);
             }, // function to computes label display of range
-            allowDelete: true, //indicates if can ranges can be removed
-            deleteTimeout: 3000
+            renderRange: null,  // function($range, range){}
         },
         _create: function () {
             var _component = this;
@@ -179,6 +182,8 @@ var assil = { debgug: false };
             $range.height(range_rect.h);
 
             $(".range-label", $range).text(options.label($range, range));
+
+            if (options.renderRange) options.renderRange($range, range);
 
             if(assil.debgug) console.log("UI range rect after change:" + JSON.stringify(getRectUsing$Position($range)));
 
